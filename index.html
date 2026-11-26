@@ -417,10 +417,12 @@
       color: var(--text-main);
       font-family: var(--font-sans);
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       flex-direction: column;
       overflow-x: hidden;
       line-height: 1.5;
+      box-sizing: border-box;
     }
 
     /* Container fluid constraints */
@@ -1805,7 +1807,12 @@
         flex-direction: row;
         align-items: stretch;
         height: 100vh;
+        height: 100dvh;
         overflow: hidden;
+        padding-top: max(env(safe-area-inset-top, 0px), 0.75rem);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        padding-left: env(safe-area-inset-left, 0px);
+        padding-right: env(safe-area-inset-right, 0px);
       }
 
       /* Left 1/4 Column Header: Header through Filters */
@@ -1813,7 +1820,7 @@
         width: 25%;
         min-width: 280px;
         max-width: 380px;
-        height: 100vh;
+        height: 100%;
         position: relative;
         top: 0;
         left: 0;
@@ -1825,10 +1832,11 @@
         flex-direction: column;
         flex-shrink: 0;
         z-index: 40;
+        padding-bottom: 2rem;
       }
 
       .top-bar {
-        padding: 1.25rem 1rem 0.85rem 1rem;
+        padding: 0.75rem 1rem 0.85rem 1rem;
         max-width: 100%;
         margin: 0;
         display: flex;
@@ -1889,19 +1897,21 @@
 
       /* Right 3/4 Column Main Content Area */
       main {
-        flex: 1;
+        flex: 1 1 auto;
+        min-width: 0;
         width: 75%;
         max-width: 100%;
-        height: 100vh;
+        height: 100%;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
-        padding: 2.25rem 2rem calc(6.5rem + env(safe-area-inset-bottom, 0px));
+        padding: 1.25rem 1.75rem calc(6rem + env(safe-area-inset-bottom, 0px));
         margin: 0;
+        box-sizing: border-box;
       }
 
       /* Additional breathing room for the active jobs tab */
       #tab-bench {
-        padding-top: 0.5rem;
+        padding-top: 0.25rem;
       }
 
       /* Dock stays centered horizontally over the 3/4 right content panel */
@@ -1910,7 +1920,7 @@
       }
 
       .jobs-grid {
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
         gap: 1.15rem;
       }
     }
