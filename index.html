@@ -1,0 +1,4807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workbench & Hardware Lab Hub</title>
+
+  <!-- PWA & Mobile Web App Meta Configuration -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="WHL">
+  <meta name="application-name" content="WHL">
+  <meta name="theme-color" content="#090d13">
+  <link rel="icon" id="dynamicFavicon" type="image/svg+xml">
+  <link rel="apple-touch-icon" id="dynamicAppleIcon">
+  <link rel="manifest" id="dynamicManifest">
+  <style>
+    :root {
+      --bg-canvas: #090d13;
+      --bg-panel: #0d1117;
+      --bg-card: #161b22;
+      --bg-elevated: #21262d;
+      --bg-input: #0b0f14;
+      --border-subtle: #21262d;
+      --border-default: #30363d;
+      --border-focus: #58a6ff;
+      --accent-orange: #ff7b00;
+      --accent-orange-bright: #f0883e;
+      --accent-orange-glow: rgba(255, 123, 0, 0.2);
+      --accent-cyan: #38bdf8;
+      --accent-cyan-bright: #0284c7;
+      --accent-cyan-glow: rgba(56, 189, 248, 0.2);
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-crimson: #f43f5e;
+      --accent-violet: #a855f7;
+      --text-main: #f0f6fc;
+      --text-muted: #8b949e;
+      --text-dim: #6e7681;
+      --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.6);
+      --shadow-glow: 0 0 16px var(--accent-orange-glow);
+    }
+
+    /* Festive Holiday Theme Overrides (Dynamic based on detected season) */
+    body.theme-christmas {
+      --bg-canvas: #060e0a;
+      --bg-panel: #0b1712;
+      --bg-card: #10211a;
+      --bg-elevated: #162d23;
+      --bg-input: #07130e;
+      --border-subtle: #19382b;
+      --border-default: #234d3b;
+      --border-focus: #10b981;
+      --accent-orange: #e53935;
+      --accent-orange-bright: #ff5252;
+      --accent-orange-glow: rgba(229, 57, 53, 0.25);
+      --accent-cyan: #34d399;
+      --accent-cyan-bright: #10b981;
+      --accent-cyan-glow: rgba(52, 211, 153, 0.22);
+    }
+
+    body.theme-cny {
+      --bg-canvas: #120505;
+      --bg-panel: #1b0a0a;
+      --bg-card: #280f0f;
+      --bg-elevated: #361515;
+      --bg-input: #0e0404;
+      --border-subtle: #3a1515;
+      --border-default: #541e1e;
+      --border-focus: #ffd700;
+      --accent-orange: #e50914;
+      --accent-orange-bright: #ff3b30;
+      --accent-orange-glow: rgba(229, 9, 20, 0.3);
+      --accent-cyan: #ffd700;
+      --accent-cyan-bright: #ffea79;
+      --accent-cyan-glow: rgba(255, 215, 0, 0.25);
+    }
+
+    body.theme-deepavali {
+      --bg-canvas: #0f0714;
+      --bg-panel: #170d1e;
+      --bg-card: #23122e;
+      --bg-elevated: #311940;
+      --bg-input: #0d0612;
+      --border-subtle: #3c1c50;
+      --border-default: #572973;
+      --border-focus: #f59e0b;
+      --accent-orange: #ff9900;
+      --accent-orange-bright: #ffb84d;
+      --accent-orange-glow: rgba(255, 153, 0, 0.3);
+      --accent-cyan: #d946ef;
+      --accent-cyan-bright: #e879f9;
+      --accent-cyan-glow: rgba(217, 70, 239, 0.25);
+    }
+
+    body.theme-newyear {
+      --bg-canvas: #060913;
+      --bg-panel: #0d1222;
+      --bg-card: #141c33;
+      --bg-elevated: #1e2848;
+      --bg-input: #070b17;
+      --border-subtle: #25335a;
+      --border-default: #35487f;
+      --border-focus: #38bdf8;
+      --accent-orange: #fbbf24;
+      --accent-orange-bright: #fde047;
+      --accent-orange-glow: rgba(251, 191, 36, 0.3);
+      --accent-cyan: #60a5fa;
+      --accent-cyan-bright: #93c5fd;
+      --accent-cyan-glow: rgba(96, 165, 250, 0.25);
+    }
+
+    body.theme-halloween {
+      --bg-canvas: #0d0803;
+      --bg-panel: #150d06;
+      --bg-card: #21150a;
+      --bg-elevated: #2f1d0f;
+      --bg-input: #0a0602;
+      --border-subtle: #3a2312;
+      --border-default: #54331a;
+      --border-focus: #ff7b00;
+      --accent-orange: #ff6600;
+      --accent-orange-bright: #ff8533;
+      --accent-orange-glow: rgba(255, 102, 0, 0.3);
+      --accent-cyan: #a855f7;
+      --accent-cyan-bright: #c084fc;
+      --accent-cyan-glow: rgba(168, 85, 247, 0.25);
+    }
+
+    /* Falling Snow / Particle Canvas */
+    #festiveParticleCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 35;
+      display: none;
+    }
+    body[class*="theme-"] #festiveParticleCanvas {
+      display: block;
+    }
+
+    /* Hamburger Button in Header */
+    .btn-hamburger {
+      width: 38px;
+      height: 38px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #1c222b;
+      border: 1px solid #444c56;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #ffffff;
+      padding: 0;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+    }
+    .btn-hamburger:hover {
+      background: #28303d;
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 10px var(--accent-cyan-glow);
+    }
+    .btn-hamburger svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+    }
+
+    /* Slide-Out Settings Sidebar Drawer */
+    .sidebar-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 95;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .sidebar-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .settings-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(340px, 86vw);
+      background: var(--bg-panel);
+      border-left: 1px solid var(--border-default);
+      z-index: 100;
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      box-shadow: -8px 0 24px rgba(0,0,0,0.65);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .settings-drawer.active {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      padding: 1.1rem 1.25rem;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .drawer-section {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .switch-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: var(--border-default);
+      transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 999px;
+    }
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      border-radius: 50%;
+    }
+    .toggle-switch input:checked + .toggle-slider {
+      background-color: #10b981;
+    }
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Boot Splash Overlay & Cinematic Launch Sequence */
+    #bootScreenOverlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at center, #111722 0%, #06090e 100%);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: all;
+      transition: opacity 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    #bootScreenOverlay.boot-fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .boot-chip-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .boot-chip-logo {
+      width: 76px;
+      height: 76px;
+      background: linear-gradient(135deg, #ff8c1a 0%, #e65100 60%, #b71c1c 100%);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 35px rgba(255, 123, 0, 0.55), inset 0 1px 2px rgba(255, 255, 255, 0.4);
+      border: 1.5px solid rgba(255, 140, 26, 0.6);
+      animation: bootChipPulse 1.6s infinite ease-in-out;
+      will-change: transform, left, top;
+    }
+
+    .boot-chip-glow-ring {
+      position: absolute;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      border: 2px dashed rgba(56, 189, 248, 0.4);
+      animation: bootRingSpin 4s linear infinite;
+      pointer-events: none;
+    }
+
+    .boot-meta-info {
+      margin-top: 1.6rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.45rem;
+      transition: opacity 0.35s ease;
+    }
+
+    .boot-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: #fff;
+    }
+
+    .boot-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+    }
+
+    .boot-progress-track {
+      width: 220px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 0.4rem;
+    }
+
+    .boot-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent-orange), var(--accent-cyan));
+      border-radius: 999px;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+      transition: width 0.2s ease-out;
+    }
+
+    /* Seamless Flight of the Logo to Header */
+    .boot-logo-flying {
+      position: fixed !important;
+      z-index: 10000;
+      transition: all 0.75s cubic-bezier(0.25, 1, 0.5, 1) !important;
+      margin: 0 !important;
+    }
+
+    @keyframes bootChipPulse {
+      0%, 100% { transform: scale(1) rotate(0deg); }
+      50% { transform: scale(1.08) rotate(3deg); }
+    }
+
+    @keyframes bootRingSpin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Fluid Page & Component Entry Transitions */
+    .fluid-fade-in {
+      animation: fluidFadeSlideIn 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .fluid-stagger-1 { animation-delay: 0.08s; }
+    .fluid-stagger-2 { animation-delay: 0.16s; }
+    .fluid-stagger-3 { animation-delay: 0.24s; }
+
+    @keyframes fluidFadeSlideIn {
+      0% {
+        opacity: 0;
+        transform: translateY(14px) scale(0.985);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-canvas);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      line-height: 1.5;
+    }
+
+    /* Container fluid constraints */
+    img, svg, canvas {
+      max-width: 100%;
+    }
+
+    /* Common Typography & Utility */
+    .mono { font-family: var(--font-mono); }
+    .text-orange { color: var(--accent-orange-bright); }
+    .text-cyan { color: var(--accent-cyan); }
+    .text-emerald { color: var(--accent-emerald); }
+    .text-amber { color: var(--accent-amber); }
+    .text-crimson { color: var(--accent-crimson); }
+    .text-violet { color: var(--accent-violet); }
+    .text-muted { color: var(--text-muted); }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.15rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+    }
+
+    /* Header & Workbench HUD Status */
+    header {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border-default);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .top-bar {
+      max-width: 1540px;
+      margin: 0 auto;
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      min-width: 0;
+      gap: 0.75rem;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      min-width: 0;
+    }
+
+    .brand-logo-container {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .brand-logo {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #ff8c1a 0%, #e65100 60%, #b71c1c 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.3);
+      border: 1px solid rgba(255, 140, 26, 0.4);
+      position: relative;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .brand-logo-glow {
+      position: absolute;
+      inset: -3px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent-orange), #38bdf8 70%);
+      opacity: 0;
+      z-index: -1;
+      filter: blur(5px);
+      transition: opacity 0.3s ease;
+    }
+
+    .brand-logo svg {
+      transform-origin: center;
+      transition: transform 0.5s ease;
+    }
+
+    /* Action-Triggered Animation Only */
+    .brand-logo-container.action-active .brand-logo {
+      animation: logoActionPop 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .brand-logo-container.action-active .brand-logo-glow {
+      animation: glowActionBurst 0.85s ease-out;
+    }
+
+    .brand-logo-container.action-active .brand-logo svg {
+      animation: logoActionSpin 0.85s ease-in-out;
+    }
+
+    @keyframes logoActionPop {
+      0% { transform: scale(1); box-shadow: 0 0 8px var(--accent-orange-glow); }
+      40% { transform: scale(1.18); box-shadow: 0 0 24px rgba(255, 123, 0, 0.7), inset 0 1px 2px rgba(255,255,255,0.6); }
+      100% { transform: scale(1); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+    }
+
+    @keyframes glowActionBurst {
+      0% { opacity: 0; transform: scale(0.9) rotate(0deg); }
+      40% { opacity: 0.95; transform: scale(1.2) rotate(90deg); }
+      100% { opacity: 0; transform: scale(1) rotate(180deg); }
+    }
+
+    @keyframes logoActionSpin {
+      0% { transform: rotate(0deg) scale(1); }
+      45% { transform: rotate(180deg) scale(1.15); }
+      100% { transform: rotate(360deg) scale(1); }
+    }
+
+    .brand-titles {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.2rem;
+      min-width: 0;
+    }
+
+    .brand-titles h1 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin: 0;
+      padding: 0;
+    }
+
+    .brand-titles .edition {
+      font-size: 0.62rem;
+      font-weight: 700;
+      background: rgba(255, 123, 0, 0.12);
+      color: var(--accent-orange-bright);
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 123, 0, 0.35);
+      letter-spacing: 0.05em;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .brand-titles p {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      line-height: 1.35;
+      margin: 0;
+      padding: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      min-width: 0;
+    }
+
+    .brand-titles p .clock-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hud-metrics {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      background: var(--bg-card);
+      padding: 0.35rem 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+      flex-shrink: 0;
+    }
+
+    .hud-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .hud-label {
+      font-size: 0.6rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+      letter-spacing: 0.05em;
+    }
+
+    .hud-value {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .hud-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-emerald);
+      box-shadow: 0 0 6px var(--accent-emerald);
+      animation: pulse-dot 2s infinite ease-in-out;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* Floating Workbench Quick Dock (Lifted Bottom Navigation) */
+    .dock-wrapper {
+      position: fixed;
+      bottom: calc(max(1rem, env(safe-area-inset-bottom, 0px)) + 0.65rem);
+      left: 50%;
+      transform: translateX(-50%);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      z-index: 50;
+      pointer-events: none;
+      width: max-content;
+      max-width: calc(100vw - 2rem);
+      transition: opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1), transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .dock-wrapper.dock-hidden {
+      opacity: 0;
+      transform: translateX(-50%) translateY(28px);
+      pointer-events: none !important;
+    }
+
+    .dock-container {
+      pointer-events: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(13, 17, 23, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 0.4rem 0.65rem;
+      border-radius: 9999px;
+      border: 1px solid rgba(48, 54, 61, 0.85);
+      box-shadow: 0 10px 32px rgba(0, 0, 0, 0.7), 0 0 1px 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .dock-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dock-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      outline: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .dock-btn svg {
+      width: 21px;
+      height: 21px;
+      stroke-width: 2;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), stroke 0.2s ease;
+    }
+
+    .dock-btn:hover {
+      color: var(--text-main);
+      background: var(--bg-card);
+      border-color: var(--border-subtle);
+      transform: translateY(-2px);
+    }
+
+    .dock-btn.active {
+      background: var(--accent-orange-glow);
+      color: var(--accent-orange-bright);
+      border-color: rgba(255, 123, 0, 0.4);
+      box-shadow: 0 0 14px var(--accent-orange-glow);
+    }
+
+    .dock-btn.active svg {
+      transform: scale(1.1);
+    }
+
+    /* Press & Hold / Desktop Hover Floating Tooltip Label */
+    .dock-tooltip {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%) translateY(4px);
+      background: #1c2128;
+      color: var(--text-main);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      padding: 0.32rem 0.7rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-default);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+      z-index: 60;
+      font-family: var(--font-sans);
+    }
+
+    .dock-tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 5px;
+      border-style: solid;
+      border-color: #1c2128 transparent transparent transparent;
+    }
+
+    /* Desktop hover only (filtered out for touchscreens so accidental taps don't stick) */
+    @media (hover: hover) and (pointer: fine) {
+      .dock-item:hover .dock-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    /* Touch press-and-hold triggered label */
+    .dock-item.show-label .dock-tooltip {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1540px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem calc(6rem + env(safe-area-inset-bottom, 0px));
+      flex: 1;
+    }
+
+    .tab-view {
+      display: none;
+      animation: fadeIn 0.2s ease-in-out forwards;
+    }
+    .tab-view.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Standard Card & Grid Layouts */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-default);
+      border-radius: 10px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      letter-spacing: -0.01em;
+    }
+
+    .card-title svg {
+      width: 18px;
+      height: 18px;
+      color: var(--accent-orange-bright);
+    }
+
+    /* Standard Form Controls & Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      background: var(--bg-elevated);
+      color: var(--text-main);
+      border: 1px solid var(--border-default);
+      padding: 0.5rem 0.9rem;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn:hover {
+      background: #2a313c;
+      border-color: #444c56;
+    }
+
+    .btn-primary {
+      background: var(--accent-orange);
+      color: #0d1117;
+      border-color: #e06c00;
+      font-weight: 700;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-orange-bright);
+      border-color: var(--accent-orange-bright);
+      color: #000;
+      box-shadow: 0 0 10px var(--accent-orange-glow);
+    }
+
+    .btn-cyan {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent-cyan);
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .btn-cyan:hover {
+      background: rgba(56, 189, 248, 0.25);
+      border-color: var(--accent-cyan);
+    }
+
+    .btn-danger {
+      background: rgba(244, 63, 94, 0.12);
+      color: var(--accent-crimson);
+      border-color: rgba(244, 63, 94, 0.35);
+    }
+
+    .btn-danger:hover {
+      background: rgba(244, 63, 94, 0.22);
+      border-color: var(--accent-crimson);
+    }
+
+    .btn-sm {
+      padding: 0.3rem 0.6rem;
+      font-size: 0.74rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .input-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+      letter-spacing: 0.04em;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-default);
+      color: var(--text-main);
+      padding: 0.55rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 2px var(--accent-cyan-glow);
+    }
+
+    /* MODULE 1: REPAIR BENCH & JOB TRACKER */
+    .header-pinned-controls {
+      max-width: 1540px;
+      margin: 0 auto;
+      padding: 0 1.25rem 0.65rem 1.25rem;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .bench-controls-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      padding-top: 0.65rem;
+    }
+
+    .bench-top-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      width: 100%;
+    }
+
+    .bench-scroll-filter-track {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 0.25rem 0.1rem 0.4rem;
+      scrollbar-width: none; /* Firefox */
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .bench-scroll-filter-track::-webkit-scrollbar {
+      display: none; /* Chrome/Safari */
+    }
+
+    .filter-chip-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-default);
+      color: var(--text-muted);
+      padding: 0.38rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .filter-chip-btn:hover {
+      background: var(--bg-elevated);
+      color: var(--text-main);
+      border-color: #484f58;
+    }
+
+    .filter-chip-btn.active {
+      background: var(--accent-orange-glow);
+      color: var(--accent-orange-bright);
+      border-color: rgba(255, 123, 0, 0.5);
+      box-shadow: 0 0 10px rgba(255, 123, 0, 0.15);
+    }
+
+    .search-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      height: 42px;
+    }
+
+    .search-input-wrapper svg {
+      position: absolute;
+      left: 0.8rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      color: var(--text-dim);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .search-input-wrapper input {
+      height: 100%;
+      padding-left: 2.3rem;
+      padding-right: 0.75rem;
+    }
+
+    .jobs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+      gap: 1rem;
+    }
+
+    .job-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-default);
+      border-radius: 10px;
+      padding: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      transition: border-color 0.15s ease, transform 0.15s ease;
+      position: relative;
+    }
+
+    .job-card:hover {
+      border-color: #484f58;
+      transform: translateY(-2px);
+    }
+
+    .job-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .job-device {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.3;
+    }
+
+    .job-submeta {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 0.2rem;
+      flex-wrap: wrap;
+    }
+
+    .job-fault-box {
+      background: var(--bg-input);
+      border-left: 3px solid var(--accent-orange);
+      padding: 0.5rem 0.7rem;
+      border-radius: 0 4px 4px 0;
+      font-size: 0.8rem;
+      color: #c9d1d9;
+    }
+
+    .diagnostic-checklist-title {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.4rem;
+    }
+
+    .progress-bar-bg {
+      height: 4px;
+      background: var(--bg-input);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 0.6rem;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-orange), var(--accent-cyan));
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    .checklist-items {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.35rem;
+    }
+
+    /* Drag and drop reordering styles */
+    .drag-step-item {
+      cursor: grab;
+      user-select: none;
+      transition: background 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+      touch-action: pan-y;
+    }
+    .drag-step-item:active {
+      cursor: grabbing;
+    }
+    .drag-step-item.is-dragging {
+      opacity: 0.45;
+      transform: scale(0.98);
+      border-color: var(--accent-orange) !important;
+      background: rgba(255, 123, 0, 0.08) !important;
+    }
+    .drag-step-item.drag-over {
+      border-color: var(--accent-cyan) !important;
+      background: rgba(56, 189, 248, 0.12) !important;
+      box-shadow: 0 0 8px var(--accent-cyan-glow);
+    }
+    .drag-handle {
+      cursor: grab;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      padding: 0 0.35rem;
+      flex-shrink: 0;
+      touch-action: none;
+    }
+    .drag-handle:hover {
+      color: var(--accent-orange-bright);
+    }
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .check-label {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.73rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .check-label input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: var(--accent-cyan);
+      cursor: pointer;
+    }
+
+    .check-label.checked {
+      color: var(--text-main);
+      text-decoration: line-through;
+      opacity: 0.75;
+    }
+
+    .job-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: auto;
+      padding-top: 0.7rem;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 0.75rem;
+    }
+
+    /* MODULE 2: COMPONENT & SCREW ORGANIZER MAT */
+    .tray-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 960px) {
+      .tray-layout { grid-template-columns: 1fr; }
+    }
+
+    .mat-wrapper {
+      background: #090c10;
+      border: 2px solid #21262d;
+      border-radius: 12px;
+      padding: 1rem;
+      position: relative;
+      box-shadow: inset 0 0 24px rgba(0,0,0,0.8);
+      background-image: 
+        radial-gradient(circle at 10px 10px, rgba(255,255,255,0.03) 1px, transparent 0);
+      background-size: 20px 20px;
+      overflow: hidden;
+    }
+
+    .mat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px dashed var(--border-default);
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .mat-grid-16 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.65rem;
+    }
+
+    @media (max-width: 580px) {
+      .mat-grid-16 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    .screw-slot {
+      aspect-ratio: 1 / 1;
+      background: var(--bg-panel);
+      border: 1px dashed var(--border-default);
+      border-radius: 8px;
+      padding: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+      user-select: none;
+      min-width: 0;
+    }
+
+    .screw-slot:hover {
+      border-color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.05);
+      transform: scale(1.02);
+    }
+
+    .screw-slot.occupied {
+      border-style: solid;
+      background: var(--bg-card);
+      border-color: var(--border-focus);
+      box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    .screw-slot.occupied::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--tag-color, var(--accent-orange));
+      border-radius: 8px 8px 0 0;
+    }
+
+    .slot-id {
+      font-size: 0.68rem;
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--text-dim);
+    }
+
+    .slot-content-preview {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2rem;
+      overflow: hidden;
+    }
+
+    .slot-icon {
+      width: 22px;
+      height: 22px;
+      stroke: var(--text-dim);
+    }
+
+    .screw-slot.occupied .slot-icon {
+      stroke: var(--tag-color, var(--accent-cyan));
+    }
+
+    .slot-part-name {
+      font-size: 0.72rem;
+      font-weight: 700;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      width: 100%;
+      color: var(--text-main);
+    }
+
+    .slot-screw-type {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .slot-qty-badge {
+      align-self: flex-end;
+      background: var(--bg-elevated);
+      font-size: 0.65rem;
+      font-family: var(--font-mono);
+      padding: 1px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border-subtle);
+      color: var(--accent-cyan);
+      font-weight: bold;
+    }
+
+    .tag-cyan { --tag-color: var(--accent-cyan); }
+    .tag-amber { --tag-color: var(--accent-amber); }
+    .tag-violet { --tag-color: var(--accent-violet); }
+    .tag-emerald { --tag-color: var(--accent-emerald); }
+    .tag-crimson { --tag-color: var(--accent-crimson); }
+
+    /* MODULE 3: MULTIMETER & DIODE MODE REFERENCE */
+    .reference-table-container {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border-default);
+    }
+
+    table.ref-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      text-align: left;
+    }
+
+    table.ref-table th {
+      background: var(--bg-panel);
+      padding: 0.75rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-default);
+      white-space: nowrap;
+    }
+
+    table.ref-table td {
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid var(--border-subtle);
+      background: var(--bg-card);
+      vertical-align: middle;
+    }
+
+    table.ref-table tr:hover td {
+      background: #1c222b;
+    }
+
+    .reading-box {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.1);
+      padding: 2px 7px;
+      border-radius: 4px;
+      display: inline-block;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .inject-box {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--accent-orange-bright);
+      background: rgba(255, 123, 0, 0.1);
+      padding: 2px 7px;
+      border-radius: 4px;
+      display: inline-block;
+      border: 1px solid rgba(255, 123, 0, 0.25);
+    }
+
+    /* MODULE 4: REPAIR YIELD & MARGIN CALCULATOR */
+    .calc-container {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+      gap: 1.25rem;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+
+    @media (max-width: 960px) {
+      .calc-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+    }
+
+    .calc-input-card {
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .calc-results-wrapper {
+      min-width: 0;
+      max-width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-sizing: border-box;
+    }
+
+    .metric-hero-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
+    }
+
+    @media (max-width: 480px) {
+      .metric-hero-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .metric-hero {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-default);
+      border-radius: 8px;
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 0;
+      max-width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .metric-hero.accented {
+      border-color: rgba(255, 123, 0, 0.4);
+      background: linear-gradient(145deg, var(--bg-panel), rgba(255, 123, 0, 0.05));
+    }
+
+    .metric-hero.accented-cyan {
+      border-color: rgba(56, 189, 248, 0.4);
+      background: linear-gradient(145deg, var(--bg-panel), rgba(56, 189, 248, 0.05));
+    }
+
+    .metric-hero .val {
+      font-size: clamp(1.15rem, 3.8vw, 1.55rem);
+      font-weight: 800;
+      font-family: var(--font-mono);
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+      line-height: 1.2;
+    }
+
+    .calc-subtext {
+      font-size: 0.68rem;
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.3;
+    }
+
+    .target-margins-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    .target-margins-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      margin-top: 0.5rem;
+      table-layout: auto;
+    }
+
+    .target-margins-table td, .target-margins-table th {
+      padding: 0.5rem 0.55rem;
+      border-bottom: 1px solid var(--border-subtle);
+      white-space: nowrap;
+    }
+
+    .target-margins-table th {
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      text-align: left;
+    }
+
+    .target-margins-table td:last-child {
+      white-space: normal;
+      min-width: 130px;
+    }
+
+    /* MODULE 5: HARDWARE TELEMETRY & STRESS BENCH */
+    .telemetry-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 1080px) {
+      .telemetry-layout { grid-template-columns: 1fr; }
+    }
+
+    .graph-viewport {
+      background: #06090e;
+      border: 1px solid var(--border-default);
+      border-radius: 10px;
+      padding: 1rem;
+      position: relative;
+      width: 100%;
+      min-width: 0;
+    }
+
+    canvas#telemetryCanvas {
+      width: 100%;
+      height: 280px;
+      display: block;
+    }
+
+    .graph-hud-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 120px), 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .gauge-block {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 0.75rem 0.5rem;
+      text-align: center;
+      min-width: 0;
+    }
+
+    .gauge-title {
+      font-size: 0.65rem;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      font-family: var(--font-mono);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .gauge-val {
+      font-size: 1.15rem;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      margin-top: 0.15rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .alert-banner {
+      display: none;
+      background: rgba(244, 63, 94, 0.15);
+      border: 1px solid var(--accent-crimson);
+      color: var(--accent-crimson);
+      border-radius: 6px;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      align-items: center;
+      gap: 0.5rem;
+      animation: pulseAlert 1.2s infinite ease-in-out;
+    }
+
+    @keyframes pulseAlert {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .graph-legend {
+      display: flex;
+      gap: 1.25rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .legend-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+    }
+
+    /* Modal Framework */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-default);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.8);
+      animation: modalSlide 0.2s ease-out;
+    }
+
+    @keyframes modalSlide {
+      from { transform: translateY(15px) scale(0.98); opacity: 0; }
+      to { transform: translateY(0) scale(1); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 1.1rem 1.25rem;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-header h3 {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .modal-body {
+      padding: 1.25rem;
+    }
+
+    .modal-footer {
+      padding: 0.9rem 1.25rem;
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.6rem;
+      background: rgba(0,0,0,0.2);
+    }
+
+    /* Toast Notification */
+    #toastContainer {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 120;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      pointer-events: none;
+    }
+
+    .toast-msg {
+      background: var(--bg-card);
+      border: 1px solid var(--border-default);
+      color: var(--text-main);
+      padding: 0.65rem 1rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: var(--shadow-md);
+      animation: toastIn 0.25s ease-out;
+      pointer-events: auto;
+    }
+
+    .toast-msg.border-orange { border-left: 3px solid var(--accent-orange-bright); }
+    .toast-msg.border-cyan { border-left: 3px solid var(--accent-cyan); }
+    .toast-msg.border-emerald { border-left: 3px solid var(--accent-emerald); }
+
+    @keyframes toastIn {
+      from { transform: translateX(30px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Range slider custom style */
+    /* Responsive Media Query Adjustments */
+    @media (max-width: 768px) {
+      main {
+        padding: 1rem 0.75rem calc(6.5rem + env(safe-area-inset-bottom, 0px));
+      }
+      .top-bar {
+        padding: 0.65rem 0.85rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.65rem;
+      }
+      .brand-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.75rem;
+        min-width: 0;
+      }
+      .brand-titles {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+      }
+      .brand-titles h1 {
+        font-size: 0.95rem;
+        flex-wrap: wrap;
+        align-items: center;
+        line-height: 1.25;
+        gap: 0.4rem;
+      }
+      .brand-titles .edition {
+        font-size: 0.58rem;
+        padding: 1px 5px;
+      }
+      .brand-titles p {
+        font-size: 0.7rem;
+        line-height: 1.3;
+      }
+      .hud-metrics {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 0.35rem;
+        padding: 0.4rem 0.6rem;
+      }
+      .hud-item {
+        align-items: center;
+        text-align: center;
+      }
+      .hud-label {
+        font-size: 0.55rem;
+      }
+      .hud-value {
+        font-size: 0.74rem;
+      }
+      .dock-wrapper {
+        padding: 0.2rem 0.75rem 0.5rem;
+      }
+      .dock-btn {
+        width: 38px;
+        height: 38px;
+      }
+      .dock-btn svg {
+        width: 18px;
+        height: 18px;
+      }
+      .checklist-items {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Cool Boot Screen Overlay -->
+  <div id="bootScreenOverlay">
+    <div class="boot-chip-wrapper" id="bootChipWrapper">
+      <div class="boot-chip-glow-ring" id="bootGlowRing"></div>
+      <div class="boot-chip-logo" id="bootChipLogo">
+        <svg id="bootChipSvg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="5" width="14" height="14" rx="2.5"/>
+          <path d="M9 9h6v6H9z"/>
+          <path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/>
+          <circle cx="12" cy="12" r="1.5" fill="#ff7b00" stroke="none"/>
+        </svg>
+      </div>
+    </div>
+    <div class="boot-meta-info" id="bootMetaInfo">
+      <div class="boot-title">Workbench &amp; Hardware Lab</div>
+      <div class="boot-status-pill">
+        <span class="hud-dot"></span>
+        <span id="bootStatusMessage">CALIBRATING BUS &amp; SENSORS...</span>
+      </div>
+      <div class="boot-progress-track">
+        <div class="boot-progress-bar" id="bootProgressBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Top Workbench HUD & Navigation Bar -->
+  <header>
+    <div class="top-bar">
+      <div class="brand-row">
+        <div class="brand">
+          <div class="brand-logo-container" id="targetHeaderLogoContainer">
+            <div class="brand-logo-glow"></div>
+            <div class="brand-logo" id="headerBrandLogo">
+              <!-- Polished Workbench Multi-tool & Silicon SVG Logo -->
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="5" width="14" height="14" rx="2.5"/>
+                <path d="M9 9h6v6H9z"/>
+                <path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4"/>
+                <circle cx="12" cy="12" r="1.5" fill="#ff7b00" stroke="none"/>
+              </svg>
+            </div>
+          </div>
+          <div class="brand-titles">
+            <h1>
+              Workbench &amp; Hardware Lab 
+              <span class="edition" id="brandEditionBadge">PRO BENCH</span>
+              <span style="color: var(--accent-cyan); font-weight: 700; font-size: 0.8rem; margin-left: 0.2rem; flex-shrink: 0; display: inline-flex; align-items: center; gap: 0.25rem;">
+                RayneWater
+                <!-- Interactive Verified Checkmark Badge Button -->
+                <button type="button" id="btnVerifyBadge" aria-label="View RayneWater Verification Credentials" title="Verified Developer &amp; Lead Hardware Technician" style="background: none; border: none; padding: 0; margin: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; outline: none;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="flex-shrink: 0; vertical-align: middle; filter: drop-shadow(0 0 4px rgba(56, 189, 248, 0.5)); transition: transform 0.2s ease;">
+                    <path d="M12 2l2.4 2.2 3.2-.4 1.3 3 2.9 1.4-.6 3.2 2 2.6-2 2.6.6 3.2-2.9 1.4-1.3 3-3.2-.4L12 22l-2.4-2.2-3.2.4-1.3-3-2.9-1.4.6-3.2-2-2.6 2-2.6-.6-3.2 2.9-1.4 1.3-3 3.2.4L12 2z" fill="#38bdf8"/>
+                    <path d="M8.5 12.2l2.3 2.3 4.7-4.7" stroke="#090d13" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </span>
+            </h1>
+            <p id="headerMetaSubline"><span id="headerLiveDateTime" class="mono text-muted clock-text">Loading date &amp; time...</span></p>
+          </div>
+        </div>
+
+        <!-- 3-Line Hamburger Settings Button (High contrast, clearly visible) -->
+        <button class="btn-hamburger" id="btnOpenSettingsDrawer" aria-label="Open Settings &amp; Sidebar" title="Settings &amp; Station Info">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6" stroke="#ffffff" />
+            <line x1="3" y1="12" x2="21" y2="12" stroke="#ffffff" />
+            <line x1="3" y1="18" x2="21" y2="18" stroke="#ffffff" />
+          </svg>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Pinned directly inside sticky header so it never moves a single pixel on scroll -->
+    <div class="header-pinned-controls" id="headerBenchControls">
+      <div class="bench-controls-bar">
+        <!-- Dedicated Full-Width Search Bar Line -->
+        <div class="search-input-wrapper">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="jobSearchInput" placeholder="Model, client, S/N..." />
+        </div>
+
+        <!-- Action Buttons Row (Below Search Bar) -->
+        <div class="bench-top-actions">
+          <button class="btn btn-primary" id="btnOpenNewJobModal" style="flex: 1; justify-content: center; white-space: nowrap;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>New Job</span>
+          </button>
+
+          <!-- Cloud Cross-Device Sync Action Button -->
+          <button class="btn btn-sm btn-cyan" id="btnOpenCloudSync" title="Cross-Device Cloud Sync" style="flex-shrink: 0; padding: 0.5rem 0.65rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+            <span class="sync-status-dot" id="cloudSyncDot" style="width: 7px; height: 7px; border-radius: 50%; background: #6e7681; display: inline-block;"></span>
+          </button>
+
+          <!-- Backup / Data Management Actions -->
+          <button class="btn btn-sm" id="btnExportJobsBackup" title="Export &amp; backup all jobs data to JSON file" style="flex-shrink: 0; padding: 0.5rem 0.65rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </button>
+          <button class="btn btn-sm" id="btnImportJobsBackup" title="Import &amp; restore jobs from backup file" style="flex-shrink: 0; padding: 0.5rem 0.65rem;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </button>
+          <input type="file" id="importJobsFileInput" accept=".json" style="display: none;" />
+        </div>
+
+        <!-- Touch-friendly Horizontal Scroll Filter Bar -->
+        <div class="bench-scroll-filter-track" id="jobFilterChipsTrack" role="tablist" aria-label="Job Status Filter">
+          <button class="filter-chip-btn active" data-filter="All">All Jobs</button>
+          <button class="filter-chip-btn" data-filter="Intake">Intake</button>
+          <button class="filter-chip-btn" data-filter="Diagnostics">Diagnostics</button>
+          <button class="filter-chip-btn" data-filter="Board Repair">Board Repair</button>
+          <button class="filter-chip-btn" data-filter="Parts Ordered">Parts Ordered</button>
+          <button class="filter-chip-btn" data-filter="Testing">Testing</button>
+          <button class="filter-chip-btn" data-filter="Ready">Ready</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Canvas for falling particles / seasonal effects -->
+  <canvas id="festiveParticleCanvas"></canvas>
+
+  <!-- Backdrop for Settings Sidebar -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <!-- Slide-Out Settings Sidebar Drawer -->
+  <aside class="settings-drawer" id="settingsDrawer" aria-label="Workbench Settings">
+    <div class="drawer-header">
+      <h3 style="font-size: 1rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Bench Settings</span>
+      </h3>
+      <button class="btn btn-sm" id="btnCloseSettingsDrawer" style="border:none; background:transparent;">✕</button>
+    </div>
+
+    <!-- Dynamic Festival Theme Toggle Section -->
+    <div class="drawer-section">
+      <div class="switch-toggle-row">
+        <div>
+          <div style="font-weight: 700; font-size: 0.88rem; display: flex; align-items: center; gap: 0.4rem;">
+            <span id="festiveThemeTitle">🎄 Festive Theme</span>
+          </div>
+          <p class="text-muted" id="festiveThemeDescription" style="font-size: 0.73rem; margin-top: 0.2rem;">Holiday accents, particle visuals &amp; festive boot screen.</p>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="toggleFestiveTheme">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Station Info Overview in Sidebar -->
+    <div class="drawer-section">
+      <div class="hud-label" style="margin-bottom: 0.2rem;">STATION INFO SUMMARY</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+        <div style="background: var(--bg-card); padding: 0.65rem; border-radius: 6px; border: 1px solid var(--border-default);">
+          <div class="hud-label">Active Jobs</div>
+          <div class="mono text-orange" id="sidebarActiveJobs" style="font-size: 1.1rem; font-weight: 800; margin-top: 0.2rem;">0</div>
+        </div>
+        <div style="background: var(--bg-card); padding: 0.65rem; border-radius: 6px; border: 1px solid var(--border-default);">
+          <div class="hud-label">Ready / Done</div>
+          <div class="mono text-emerald" id="sidebarReadyJobs" style="font-size: 1.1rem; font-weight: 800; margin-top: 0.2rem;">0</div>
+        </div>
+        <div style="background: var(--bg-card); padding: 0.65rem; border-radius: 6px; border: 1px solid var(--border-default);">
+          <div class="hud-label">Tray Chambers</div>
+          <div class="mono text-cyan" id="sidebarOccupiedTrays" style="font-size: 1.1rem; font-weight: 800; margin-top: 0.2rem;">0/16</div>
+        </div>
+        <div style="background: var(--bg-card); padding: 0.65rem; border-radius: 6px; border: 1px solid var(--border-default);">
+          <div class="hud-label">Est. Flip Net</div>
+          <div class="mono text-emerald" id="sidebarFlipNet" style="font-size: 1.1rem; font-weight: 800; margin-top: 0.2rem;">+$0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PWA Install Application Section -->
+    <div class="drawer-section" id="pwaInstallSection">
+      <div class="hud-label" style="margin-bottom: 0.2rem;">PROGRESSIVE WEB APP</div>
+      <div style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: 8px; padding: 0.85rem; display: flex; flex-direction: column; gap: 0.65rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <img id="pwaDrawerAppIcon" alt="WHL App Icon" style="width: 38px; height: 38px; border-radius: 9px; box-shadow: 0 0 10px rgba(255,123,0,0.4); flex-shrink: 0;" />
+          <div style="min-width: 0;">
+            <div style="font-weight: 800; font-size: 0.95rem; color: #fff;">WHL</div>
+            <div class="mono text-muted" style="font-size: 0.68rem;">Workbench &amp; Hardware Lab</div>
+          </div>
+        </div>
+        <p style="font-size: 0.74rem; color: #c9d1d9; line-height: 1.35;">
+          Install <strong>WHL</strong> directly to your home screen or desktop dock for standalone offline access.
+        </p>
+        <button type="button" class="btn btn-primary btn-sm" id="btnInstallPwa" style="width: 100%;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Install WHL App</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 1 Other Useful Tool: Persistent Bench Scratchpad -->
+    <div class="drawer-section" style="flex: 1; border-bottom: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="hud-label">BENCH SCRATCHPAD / QUICK NOTES</div>
+        <span class="mono text-muted" id="scratchpadSaveStatus" style="font-size: 0.65rem;">Auto-saved</span>
+      </div>
+      <textarea id="benchScratchpad" rows="7" placeholder="Pin quick IC part numbers, SMD resistor values, diode readings, or client notes here..." style="font-family: var(--font-mono); font-size: 0.78rem; resize: none; flex: 1; min-height: 120px;"></textarea>
+    </div>
+  </aside>
+
+  <!-- Main Viewports -->
+  <main>
+
+    <!-- MODULE 1: ACTIVE REPAIR BENCH & JOB TRACKER -->
+    <section id="tab-bench" class="tab-view active">
+      <div class="jobs-grid" id="jobsGridContainer">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- MODULE 2: INTERACTIVE SCREW & COMPONENT ORGANIZER MAT -->
+    <section id="tab-tray" class="tab-view">
+      <div class="tray-layout">
+        <div class="mat-wrapper">
+          <div class="mat-header">
+            <div>
+              <h2 style="font-size: 1.05rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-orange)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 14.14 14.14M14.83 9.17l-5.66 5.66"/></svg>
+                Magnetic Fastener &amp; Screw Grid (16-Chamber Mat)
+              </h2>
+              <p class="text-muted" style="font-size: 0.75rem;">Click any cell to label screw type, quantity, component origin, or color tag.</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-sm btn-danger" id="btnClearAllTrays">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Clear Entire Tray
+              </button>
+            </div>
+          </div>
+
+          <div class="mat-grid-16" id="screwGridMat">
+            <!-- 16 Cells A1 - D4 populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Mat Fastener Inspector & Quick Summary -->
+        <div class="card" style="display: flex; flex-direction: column;">
+          <div class="card-header">
+            <span class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              Selected Chamber Details
+            </span>
+            <span class="badge" style="background:#21262d; color: var(--accent-cyan);" id="selectedSlotIndicator">NONE</span>
+          </div>
+
+          <div id="slotInspectorDetails" style="flex: 1; display: flex; flex-direction: column; justify-content: center; text-align: center; color: var(--text-dim); padding: 1.5rem 0.5rem;">
+            Select any chamber cell on the 4x4 tray grid to inspect or modify stored fasteners.
+          </div>
+
+          <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.5rem;">BENCH TIP:</div>
+            <p style="font-size: 0.74rem; color: var(--text-dim);">
+              Use Color coding for different assemblies: <strong class="text-cyan">Cyan</strong> for chassis/frame, <strong class="text-amber">Amber</strong> for motherboard, <strong class="text-crimson">Crimson</strong> for heatsinks.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODULE 3: MULTIMETER DIODE MODE & VOLTAGE RAILS -->
+    <section id="tab-rails" class="tab-view">
+      <div class="card">
+        <div class="card-header" style="flex-wrap: wrap; gap: 0.75rem;">
+          <div>
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Motherboard &amp; GPU Power Rail Reference Catalog
+            </div>
+            <p class="text-muted" style="font-size: 0.75rem;">Diode mode drop (Red Probe on GND, Black Probe on Rail), Typical Ground Resistance &amp; Safe Injection Limits</p>
+          </div>
+          <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <div class="search-input-wrapper" style="min-width: 200px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="railSearchInput" placeholder="Search rail name, symptom..." />
+            </div>
+            <select id="railCategoryFilter" style="width: auto; padding: 0.45rem 0.65rem;">
+              <option value="All">All Categories</option>
+              <option value="PC GPUs/Motherboards">PC GPUs/Motherboards</option>
+              <option value="Consoles">Consoles (PS5/Xbox/Switch)</option>
+              <option value="Smartphones/Handhelds">Smartphones &amp; Handhelds</option>
+            </select>
+            <button class="btn btn-cyan btn-sm" id="btnOpenAddRailModal">
+              + Custom Rail
+            </button>
+          </div>
+        </div>
+
+        <div class="reference-table-container">
+          <table class="ref-table">
+            <thead>
+              <tr>
+                <th>Power Rail</th>
+                <th>Category</th>
+                <th>Diode Drop (Red=GND)</th>
+                <th>Typical Ω to GND</th>
+                <th>Max Injection (V / A)</th>
+                <th>Diagnostic Notes &amp; Symptoms</th>
+              </tr>
+            </thead>
+            <tbody id="railTableBody">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- MODULE 4: FLIP YIELD & REPAIR COST/MARGIN ESTIMATOR -->
+    <section id="tab-yield" class="tab-view">
+      <div class="calc-container">
+        <!-- Input Form & Presets -->
+        <div class="card calc-input-card">
+          <div class="card-header" style="flex-wrap: wrap; gap: 0.6rem;">
+            <span class="card-title" style="min-width: 0;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="8" x2="6.01" y2="8"/><line x1="10" y1="8" x2="10.01" y2="8"/><line x1="14" y1="8" x2="14.01" y2="8"/><line x1="18" y1="8" x2="18.01" y2="8"/><line x1="6" y1="12" x2="6.01" y2="12"/><line x1="10" y1="12" x2="10.01" y2="12"/><line x1="14" y1="12" x2="14.01" y2="12"/><line x1="18" y1="12" x2="18.01" y2="12"/></svg>
+              <span>Flip Costing</span>
+            </span>
+            <select id="calcPresetSelector" style="width: auto; max-width: 100%; font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+              <option value="">Load Preset Scenario...</option>
+              <option value="preset-gpu">RTX 3080 Shorted DrMOS</option>
+              <option value="preset-ps5">PS5 Optical & Liquid Metal</option>
+              <option value="preset-thinkpad">No-Power ThinkPad Board</option>
+              <option value="preset-deck">Steam Deck OLED Screen</option>
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="calcAcquireCost">Acquired Hardware / Core Cost ($)</label>
+            <input type="number" id="calcAcquireCost" value="120" min="0" step="1">
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem;">
+            <div class="input-group">
+              <label class="input-label" for="calcPartsCost">Parts &amp; Donors ($)</label>
+              <input type="number" id="calcPartsCost" value="35" min="0" step="1">
+            </div>
+            <div class="input-group">
+              <label class="input-label" for="calcShippingFees">Fees &amp; Shipping ($)</label>
+              <input type="number" id="calcShippingFees" value="25" min="0" step="1">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem;">
+            <div class="input-group">
+              <label class="input-label" for="calcLaborHours">Bench Labor Hours</label>
+              <input type="number" id="calcLaborHours" value="2.5" min="0" step="0.5">
+            </div>
+            <div class="input-group">
+              <label class="input-label" for="calcHourlyRate">Shop Rate ($/hr)</label>
+              <input type="number" id="calcHourlyRate" value="45" min="0" step="5">
+            </div>
+          </div>
+
+          <div class="input-group" style="margin-top: 0.5rem;">
+            <label class="input-label" for="calcTargetSell" style="color: var(--accent-orange-bright);">Target List / Resale Price ($)</label>
+            <input type="number" id="calcTargetSell" value="380" min="0" step="5" style="border-color: rgba(255,123,0,0.5); font-weight: bold; font-size: 1rem;">
+          </div>
+        </div>
+
+        <!-- Calculated Metrics & Targets -->
+        <div class="calc-results-wrapper">
+          <div class="metric-hero-grid">
+            <div class="metric-hero accented">
+              <span class="hud-label text-orange">Estimated Net Profit</span>
+              <span class="val text-orange" id="calcNetProfit">$87.50</span>
+              <span class="text-muted calc-subtext" id="calcTotalCostSummary">Total Investment: $292.50</span>
+            </div>
+
+            <div class="metric-hero accented-cyan">
+              <span class="hud-label text-cyan">Profit Margin (%)</span>
+              <span class="val text-cyan" id="calcMarginPercent">23.0%</span>
+              <span class="text-muted calc-subtext" id="calcRoiSummary">ROI: +29.9%</span>
+            </div>
+
+            <div class="metric-hero">
+              <span class="hud-label">Breakeven Price</span>
+              <span class="val text-muted mono" id="calcBreakevenVal">$292.50</span>
+              <span class="text-dim calc-subtext">Minimum exit to recover all costs</span>
+            </div>
+
+            <div class="metric-hero">
+              <span class="hud-label">Labor Value Captured</span>
+              <span class="val text-emerald mono" id="calcLaborTotal">$112.50</span>
+              <span class="text-dim calc-subtext">Compensated billable bench time</span>
+            </div>
+          </div>
+
+          <!-- Target Margin Lookup -->
+          <div class="card" style="min-width: 0; max-width: 100%; overflow: hidden; box-sizing: border-box;">
+            <div class="card-title" style="margin-bottom: 0.5rem; flex-wrap: wrap;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V9"/></svg>
+              <span>Dynamic Target Margin Table</span>
+            </div>
+            <div class="target-margins-wrapper">
+              <table class="target-margins-table">
+        <thead>
+          <tr>
+            <th>Target Margin</th>
+            <th>List Price</th>
+            <th>Net Profit</th>
+            <th>Outcome</th>
+          </tr>
+        </thead>
+        <tbody id="targetMarginsTableBody">
+          <!-- Dynamically populated based on current cost -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</section>
+
+    <!-- MODULE 5: SMD & PINOUT LOOKUP / COMPONENT CALCULATOR -->
+    <section id="tab-telemetry" class="tab-view">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 1.25rem;">
+        
+        <!-- SMD Marking & Capacitor Decoder -->
+        <div class="card" style="display: flex; flex-direction: column; gap: 0.85rem;">
+          <div class="card-header" style="margin-bottom: 0;">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+              SMD Marking Decoder
+            </div>
+            <span class="badge" style="background: rgba(56,189,248,0.15); color: var(--accent-cyan);">SMD / EIA-96</span>
+          </div>
+          <p class="text-muted" style="font-size: 0.75rem;">Decode 3-digit, 4-digit, R-notation, EIA-96 resistor codes, or 3-digit ceramic capacitor codes.</p>
+
+          <div class="input-group">
+            <label class="input-label" for="smdCodeInput">SMD Code on Chip / Package</label>
+            <div style="display: flex; gap: 0.5rem;">
+              <input type="text" id="smdCodeInput" placeholder="e.g. 472, 1001, 4R7, 01C, 104" style="font-family: var(--font-mono); font-weight: 700; text-transform: uppercase; font-size: 1rem; color: var(--accent-cyan);">
+              <button type="button" class="btn btn-cyan btn-sm" id="btnDecodeSmd">Decode</button>
+            </div>
+            <span style="font-size: 0.68rem; color: var(--text-dim); margin-top: 0.2rem;">Supports: 472 (4.7kΩ), 4R7 (4.7Ω), 01C (10kΩ 1%), 104 (100nF)</span>
+          </div>
+
+          <!-- Decoded Results Display -->
+          <div style="background: var(--bg-panel); border: 1px solid var(--border-default); border-radius: 8px; padding: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <span class="hud-label">Resistor Value:</span>
+              <span class="mono text-orange" id="smdResistorResult" style="font-size: 1.25rem; font-weight: 800;">4.7 kΩ (5%)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px dashed var(--border-subtle); padding-top: 0.4rem;">
+              <span class="hud-label">Capacitor Equivalent:</span>
+              <span class="mono text-cyan" id="smdCapacitorResult" style="font-size: 1rem; font-weight: 700;">4,700 pF / 4.7 nF</span>
+            </div>
+            <div style="font-size: 0.72rem; color: var(--text-muted); line-height: 1.35; margin-top: 0.2rem;" id="smdExplanation">
+              Format: 3-Digit standard code. First 2 digits (47) multiplied by 10^2 = 4,700 Ω.
+            </div>
+          </div>
+
+          <!-- Quick Presets -->
+          <div>
+            <div class="hud-label" style="margin-bottom: 0.35rem;">COMMON BENCH VALUES</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.35rem;">
+              <button class="filter-chip-btn btn-sm" onclick="quickSmd('0')">0Ω (Jumper)</button>
+              <button class="filter-chip-btn btn-sm" onclick="quickSmd('4R7')">4R7 (4.7Ω)</button>
+              <button class="filter-chip-btn btn-sm" onclick="quickSmd('100')">100 (10Ω)</button>
+              <button class="filter-chip-btn btn-sm" onclick="quickSmd('103')">103 (10kΩ)</button>
+              <button class="filter-chip-btn btn-sm" onclick="quickSmd('01C')">01C (10kΩ 1%)</button>
+              <button class="filter-chip-btn btn-sm" onclick="quickSmd('104')">104 (100nF)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual 4-Band Through-Hole Resistor Calculator -->
+        <div class="card" style="display: flex; flex-direction: column; gap: 0.85rem;">
+          <div class="card-header" style="margin-bottom: 0;">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>
+              Resistor Color Band Calculator
+            </div>
+            <span class="badge" style="background: rgba(16,185,129,0.15); color: var(--accent-emerald);">4-Band</span>
+          </div>
+
+          <!-- Visual Resistor Preview -->
+          <div style="background: #1c1f26; border-radius: 8px; border: 1px solid var(--border-default); padding: 1.25rem 0.75rem; display: flex; align-items: center; justify-content: center; position: relative;">
+            <div style="width: 24px; height: 3px; background: #8b949e;"></div>
+            <div style="display: flex; align-items: center; background: #d4a373; height: 38px; width: 170px; border-radius: 19px; justify-content: space-evenly; border: 2px solid #a3704c; box-shadow: inset 0 2px 4px rgba(255,255,255,0.25), inset 0 -2px 4px rgba(0,0,0,0.4);">
+              <div id="resBand1Preview" style="width: 10px; height: 34px; background: #964b00; border-radius: 1px;"></div>
+              <div id="resBand2Preview" style="width: 10px; height: 34px; background: #000000; border-radius: 1px;"></div>
+              <div id="resBand3Preview" style="width: 10px; height: 34px; background: #ff0000; border-radius: 1px;"></div>
+              <div style="width: 14px;"></div>
+              <div id="resBand4Preview" style="width: 10px; height: 34px; background: #ffd700; border-radius: 1px;"></div>
+            </div>
+            <div style="width: 24px; height: 3px; background: #8b949e;"></div>
+          </div>
+
+          <!-- Band Selectors -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+            <div class="input-group" style="margin-bottom: 0;">
+              <label class="input-label">1st Band (Digit)</label>
+              <select id="band1Select" onchange="calculateColorBands()">
+                <option value="1">1 Brown</option>
+                <option value="2">2 Red</option>
+                <option value="3">3 Orange</option>
+                <option value="4">4 Yellow</option>
+                <option value="5">5 Green</option>
+                <option value="6">6 Blue</option>
+                <option value="7">7 Violet</option>
+                <option value="8">8 Grey</option>
+                <option value="9">9 White</option>
+              </select>
+            </div>
+            <div class="input-group" style="margin-bottom: 0;">
+              <label class="input-label">2nd Band (Digit)</label>
+              <select id="band2Select" onchange="calculateColorBands()">
+                <option value="0" selected>0 Black</option>
+                <option value="1">1 Brown</option>
+                <option value="2">2 Red</option>
+                <option value="3">3 Orange</option>
+                <option value="4">4 Yellow</option>
+                <option value="5">5 Green</option>
+                <option value="6">6 Blue</option>
+                <option value="7">7 Violet</option>
+                <option value="8">8 Grey</option>
+                <option value="9">9 White</option>
+              </select>
+            </div>
+            <div class="input-group" style="margin-bottom: 0;">
+              <label class="input-label">3rd Band (Multiplier)</label>
+              <select id="band3Select" onchange="calculateColorBands()">
+                <option value="0.1">×0.1 Gold</option>
+                <option value="0.01">×0.01 Silver</option>
+                <option value="1">×1 Black (1Ω)</option>
+                <option value="10">×10 Brown (10Ω)</option>
+                <option value="100" selected>×100 Red (100Ω)</option>
+                <option value="1000">×1k Orange (1kΩ)</option>
+                <option value="10000">×10k Yellow (10kΩ)</option>
+                <option value="100000">×100k Green (100kΩ)</option>
+                <option value="1000000">×1M Blue (1MΩ)</option>
+              </select>
+            </div>
+            <div class="input-group" style="margin-bottom: 0;">
+              <label class="input-label">4th Band (Tolerance)</label>
+              <select id="band4Select" onchange="calculateColorBands()">
+                <option value="5" selected>±5% Gold</option>
+                <option value="10">±10% Silver</option>
+                <option value="1">±1% Brown</option>
+                <option value="2">±2% Red</option>
+                <option value="0.5">±0.5% Green</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Result -->
+          <div style="background: var(--bg-panel); border: 1px solid var(--border-default); border-radius: 8px; padding: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div class="hud-label">CALCULATED RESISTANCE</div>
+              <div class="mono text-orange" id="colorBandResultValue" style="font-size: 1.3rem; font-weight: 800; margin-top: 0.15rem;">1.0 kΩ</div>
+            </div>
+            <div style="text-align: right;">
+              <div class="hud-label">TOLERANCE RANGE</div>
+              <div class="mono text-muted" id="colorBandRange" style="font-size: 0.8rem;">950 Ω – 1.05 kΩ (±5%)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Workbench Connector & IC Pinouts Quick-Reference -->
+        <div class="card" style="display: flex; flex-direction: column; gap: 0.85rem; grid-column: 1 / -1;">
+          <div class="card-header" style="margin-bottom: 0; flex-wrap: wrap; gap: 0.5rem;">
+            <div class="card-title">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"/><path d="M3 9h18v6H3z"/><line x1="8" y1="15" x2="8" y2="21"/><line x1="16" y1="15" x2="16" y2="21"/><line x1="8" y1="3" x2="8" y2="9"/><line x1="16" y1="3" x2="16" y2="9"/></svg>
+              Bench Pinout &amp; Connector Reference
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <select id="pinoutSelector" onchange="renderSelectedPinout()" style="padding: 0.35rem 0.65rem; width: auto; font-size: 0.8rem;">
+                <option value="usbc">USB Type-C (24-Pin Reversible)</option>
+                <option value="bios">SOIC-8 / WSON-8 SPI Flash BIOS</option>
+                <option value="hdmi">HDMI Type-A (19-Pin Port)</option>
+                <option value="pcie">PCIe 8-Pin Power Connector</option>
+                <option value="atx24">ATX 24-Pin Main Motherboard Power</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="pinoutDisplayContainer" style="overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 8px; border: 1px solid var(--border-default);">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Floating Workbench Quick Dock (Positioned Bottom & Lifted for Mobile Home Bar) -->
+  <div class="dock-wrapper">
+    <nav class="dock-container" aria-label="Workbench Module Dock">
+      <div class="dock-item" data-tooltip="Active Repair Bench">
+        <button class="dock-btn active" data-tab="tab-bench" aria-label="Active Repair Bench">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+        </button>
+        <span class="dock-tooltip">Active Repair Bench</span>
+      </div>
+
+      <div class="dock-item" data-tooltip="Screw &amp; Tray Mat (4x4)">
+        <button class="dock-btn" data-tab="tab-tray" aria-label="Screw &amp; Tray Mat (4x4)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        </button>
+        <span class="dock-tooltip">Screw &amp; Tray Mat</span>
+      </div>
+
+      <div class="dock-item" data-tooltip="Multimeter &amp; Rail Ref">
+        <button class="dock-btn" data-tab="tab-rails" aria-label="Multimeter &amp; Rail Ref">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </button>
+        <span class="dock-tooltip">Multimeter &amp; Rail Ref</span>
+      </div>
+
+      <div class="dock-item" data-tooltip="Flip Yield &amp; Margins">
+        <button class="dock-btn" data-tab="tab-yield" aria-label="Flip Yield &amp; Margins">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </button>
+        <span class="dock-tooltip">Flip Yield &amp; Margins</span>
+      </div>
+
+      <div class="dock-item" data-tooltip="SMD &amp; Pinout Lookup">
+        <button class="dock-btn" data-tab="tab-telemetry" aria-label="SMD &amp; Pinout Lookup">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>
+        </button>
+        <span class="dock-tooltip">SMD &amp; Pinouts</span>
+      </div>
+    </nav>
+  </div>
+
+  <!-- MODAL 1: NEW / EDIT JOB MODAL -->
+  <div class="modal-backdrop" id="modalJobEditor">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="jobModalTitle">Log New Bench Job</h3>
+        <button class="btn btn-sm" style="border:none; background:transparent;" onclick="closeModal('modalJobEditor')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="formJobCard" onsubmit="handleSaveJob(event)">
+          <input type="hidden" id="jobFieldId">
+          <div class="input-group">
+            <label class="input-label" for="jobFieldDevice">Device Model / Hardware *</label>
+            <input type="text" id="jobFieldDevice" placeholder="e.g. ASUS ROG Strix RTX 3080 OC" required>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div class="input-group">
+              <label class="input-label" for="jobFieldClient">Client / Tag *</label>
+              <input type="text" id="jobFieldClient" placeholder="e.g. Client: Apex Studios" required>
+            </div>
+            <div class="input-group">
+              <label class="input-label" for="jobFieldSerial">Serial / Board ID</label>
+              <input type="text" id="jobFieldSerial" placeholder="e.g. SN-8921B-REV2">
+            </div>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="jobFieldStatus">Current Phase / Status</label>
+            <select id="jobFieldStatus">
+              <option value="Intake">Intake</option>
+              <option value="Diagnostics">Diagnostics</option>
+              <option value="Board Repair">Board Repair</option>
+              <option value="Parts Ordered">Parts Ordered</option>
+              <option value="Testing">Testing</option>
+              <option value="Ready">Ready</option>
+            </select>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div class="input-group">
+              <label class="input-label" for="jobFieldProfitType">Financial Type</label>
+              <select id="jobFieldProfitType">
+                <option value="Service Fee">Client Repair Fee</option>
+                <option value="Flip Gain/Loss">Flip Profit / Loss</option>
+              </select>
+            </div>
+            <div class="input-group">
+              <label class="input-label" for="jobFieldProfitAmount">Amount ($)</label>
+              <input type="number" id="jobFieldProfitAmount" placeholder="e.g. 140 or -25" step="0.01">
+            </div>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="jobFieldFault">Reported Fault &amp; Initial Symptoms</label>
+            <textarea id="jobFieldFault" rows="3" placeholder="e.g. Instant shutdown under 3D load, black screen, 12V rail shorted to ground." required></textarea>
+          </div>
+          <div class="modal-footer" style="padding-right:0; padding-bottom:0; background:none;">
+            <button type="button" class="btn" onclick="closeModal('modalJobEditor')">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Job Card</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: SCREW ORGANIZER CELL EDITOR -->
+  <div class="modal-backdrop" id="modalScrewSlot">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Edit Chamber Fasteners: <span class="text-cyan mono" id="modalSlotLabel">A1</span></h3>
+        <button class="btn btn-sm" style="border:none; background:transparent;" onclick="closeModal('modalScrewSlot')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="formScrewSlot" onsubmit="handleSaveSlot(event)">
+          <input type="hidden" id="slotFieldId">
+          <div class="input-group">
+            <label class="input-label" for="slotFieldPart">Component / Assembly Location *</label>
+            <input type="text" id="slotFieldPart" placeholder="e.g. GPU Heatsink Retention Bracket" required>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="slotFieldScrew">Thread / Fastener Type</label>
+            <input type="text" id="slotFieldScrew" placeholder="e.g. M2.5x5mm Spring Screws, Torx T8">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div class="input-group">
+              <label class="input-label" for="slotFieldQty">Fastener Count</label>
+              <input type="number" id="slotFieldQty" min="0" max="64" value="4">
+            </div>
+            <div class="input-group">
+              <label class="input-label" for="slotFieldColor">Tag Accent</label>
+              <select id="slotFieldColor">
+                <option value="tag-cyan">Cyan (Chassis/Frame)</option>
+                <option value="tag-amber">Amber (Motherboard)</option>
+                <option value="tag-crimson">Crimson (Cooler/Heatsink)</option>
+                <option value="tag-emerald">Emerald (Brackets/IO)</option>
+                <option value="tag-violet">Violet (Shielding/Misc)</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer" style="padding-right:0; padding-bottom:0; background:none; justify-content: space-between;">
+            <button type="button" class="btn btn-danger btn-sm" onclick="handleClearCurrentSlot()">Clear Chamber</button>
+            <div style="display: flex; gap: 0.5rem;">
+              <button type="button" class="btn" onclick="closeModal('modalScrewSlot')">Cancel</button>
+              <button type="submit" class="btn btn-cyan">Save Chamber</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 3: CUSTOM RAIL REFERENCE CREATOR -->
+  <div class="modal-backdrop" id="modalAddRail">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Add Custom Power Rail Reference</h3>
+        <button class="btn btn-sm" style="border:none; background:transparent;" onclick="closeModal('modalAddRail')">✕</button>
+      </div>
+      <div class="modal-body">
+        <form id="formAddRail" onsubmit="handleSaveRail(event)">
+          <div class="input-group">
+            <label class="input-label" for="railFieldName">Power Rail Identifier *</label>
+            <input type="text" id="railFieldName" placeholder="e.g. 1.8V VDD_SOC, VPP 2.5V" required>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="railFieldCat">Device Category *</label>
+            <select id="railFieldCat">
+              <option value="PC GPUs/Motherboards">PC GPUs/Motherboards</option>
+              <option value="Consoles">Consoles (PS5/Xbox/Switch)</option>
+              <option value="Smartphones/Handhelds">Smartphones &amp; Handhelds</option>
+            </select>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div class="input-group">
+              <label class="input-label" for="railFieldDiode">Diode Drop Range *</label>
+              <input type="text" id="railFieldDiode" placeholder="e.g. 0.380V – 0.440V" required>
+            </div>
+            <div class="input-group">
+              <label class="input-label" for="railFieldResist">Typical Ground Ω *</label>
+              <input type="text" id="railFieldResist" placeholder="e.g. ~450 Ω or > 10 kΩ" required>
+            </div>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="railFieldInjection">Safe Injection Limit *</label>
+            <input type="text" id="railFieldInjection" placeholder="e.g. Max 1.8V @ 2.0A" required>
+          </div>
+          <div class="input-group">
+            <label class="input-label" for="railFieldNotes">Diagnostic Notes / Symptoms</label>
+            <textarea id="railFieldNotes" rows="2" placeholder="e.g. Powers memory controller, short causes zero display and fan spin loop."></textarea>
+          </div>
+          <div class="modal-footer" style="padding-right:0; padding-bottom:0; background:none;">
+            <button type="button" class="btn" onclick="closeModal('modalAddRail')">Cancel</button>
+            <button type="submit" class="btn btn-cyan">Add Rail Entry</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 5: CROSS-DEVICE CLOUD SYNC CONFIGURATION -->
+  <div class="modal-backdrop" id="modalCloudSync">
+    <div class="modal-box" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 style="display: flex; align-items: center; gap: 0.5rem;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>
+          Cross-Device Cloud Sync
+        </h3>
+        <button class="btn btn-sm" style="border:none; background:transparent;" onclick="closeModal('modalCloudSync')">✕</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+        <p style="font-size: 0.8rem; color: var(--text-muted); line-height: 1.45;">
+          Enter a custom secret <strong>Sync Key</strong> (or passphrase). Any phone, tablet, laptop, or bench PC entering the <em>exact same key</em> will automatically synchronize all jobs and repair steps.
+        </p>
+
+        <div class="input-group">
+          <label class="input-label" for="cloudSyncKeyInput">Your Private Sync Key</label>
+          <div style="display: flex; gap: 0.5rem;">
+            <input type="text" id="cloudSyncKeyInput" placeholder="e.g. raynewater-bench-2026" style="font-family: var(--font-mono); font-weight: 600; color: var(--accent-cyan);">
+            <button class="btn btn-sm" id="btnGenerateSyncKey" type="button" style="white-space: nowrap;">Random</button>
+          </div>
+          <span style="font-size: 0.68rem; color: var(--text-dim); margin-top: 0.2rem;">Tip: Keep it unique to you, like a secret password.</span>
+        </div>
+
+        <div style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: 8px; padding: 0.8rem; display: flex; flex-direction: column; gap: 0.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;">
+            <span class="text-muted">Cloud Status:</span>
+            <span class="mono font-bold" id="cloudSyncStatusText" style="color: var(--text-dim);">Disconnected</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;">
+            <span class="text-muted">Last Cloud Push / Fetch:</span>
+            <span class="mono text-muted" id="cloudSyncLastTime">Never</span>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+          <button type="button" class="btn btn-cyan btn-sm" id="btnPushCloudManual">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+            Push to Cloud
+          </button>
+          <button type="button" class="btn btn-sm" id="btnPullCloudManual">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+            Pull from Cloud
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: space-between;">
+        <button type="button" class="btn btn-danger btn-sm" id="btnDisconnectCloud">Disconnect</button>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="btn btn-sm" onclick="closeModal('modalCloudSync')">Close</button>
+          <button type="button" class="btn btn-sm btn-primary" id="btnSaveCloudKey">Connect &amp; Sync</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 4: DETAILED JOB INSPECTOR POP-OUT -->
+  <div class="modal-backdrop" id="modalJobDetail">
+    <div class="modal-box" style="max-width: 580px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <h3 id="detailJobDevice" style="font-size: 1.05rem; font-weight: 800;">Device Details</h3>
+          <span class="badge" id="detailJobStatusBadge">Status</span>
+        </div>
+        <button class="btn btn-sm" style="border:none; background:transparent;" onclick="closeModal('modalJobDetail')">✕</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+        <!-- Financial Summary Banner -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: 8px; padding: 0.85rem 1rem; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div class="hud-label" id="detailJobProfitLabel">REPAIR FEE CHARGED</div>
+            <div class="mono" id="detailJobProfitAmount" style="font-size: 1.3rem; font-weight: 800; margin-top: 0.15rem;">$0.00</div>
+          </div>
+          <div style="text-align: right;">
+            <div class="hud-label">LOGGED AT</div>
+            <div class="mono text-muted" id="detailJobTimestamp" style="font-size: 0.75rem;">--</div>
+          </div>
+        </div>
+
+        <!-- Metadata & Fault Description -->
+        <div style="background: var(--bg-input); border-radius: 6px; padding: 0.85rem; border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 0.45rem;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.78rem;">
+            <span class="text-muted">Client / Origin:</span>
+            <strong id="detailJobClient" class="text-main">--</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.78rem;">
+            <span class="text-muted">Serial / S/N:</span>
+            <span class="mono text-cyan" id="detailJobSerial">--</span>
+          </div>
+          <div style="border-top: 1px dashed var(--border-subtle); margin-top: 0.25rem; padding-top: 0.45rem;">
+            <div class="hud-label" style="margin-bottom: 0.25rem;">Reported Fault:</div>
+            <p id="detailJobFault" style="font-size: 0.8rem; color: #c9d1d9; line-height: 1.4;">--</p>
+          </div>
+        </div>
+
+        <!-- Diagnostic Checklist & Repair Workflow -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span class="hud-label">REPAIR &amp; DIAGNOSTIC WORKFLOW STEPS</span>
+            <span class="mono text-cyan font-bold" id="detailJobChecklistScore" style="font-size: 0.75rem;">0/0 Passed</span>
+          </div>
+
+          <div id="detailJobChecklistItems" style="display: flex; flex-direction: column; gap: 0.4rem; max-height: 220px; overflow-y: auto; padding-right: 0.2rem;">
+            <!-- Populated via JS -->
+          </div>
+
+          <!-- Add Custom Step Input -->
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.65rem;">
+            <input type="text" id="detailNewStepInput" placeholder="Add custom diagnostic or repair step..." style="font-size: 0.8rem;">
+            <button type="button" class="btn btn-cyan btn-sm" id="btnDetailAddStep" style="white-space: nowrap;">+ Step</button>
+          </div>
+        </div>
+
+        <!-- 100% Complete Action Trigger -->
+        <div id="detailJobCompleteBanner" style="display: none; background: rgba(16, 185, 129, 0.12); border: 1px solid var(--accent-emerald); border-radius: 8px; padding: 0.75rem 1rem; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.1rem;">🎉</span>
+            <div>
+              <div style="font-size: 0.82rem; font-weight: 700; color: var(--accent-emerald);">All Diagnostic Steps Completed!</div>
+              <div style="font-size: 0.7rem; color: var(--text-muted);">Ready for final assembly and customer handover.</div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-primary" id="btnDetailMarkReady">Mark as Ready</button>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="justify-content: space-between;">
+        <span class="mono text-dim" id="detailJobFooterId" style="font-size: 0.72rem; align-self: center;">ID: --</span>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="btn btn-sm" onclick="closeModal('modalJobDetail')">Close</button>
+          <button type="button" class="btn btn-cyan btn-sm" id="btnDetailEditJob">Edit Details</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 6: VERIFIED DEVELOPER CREDENTIALS POP-UP -->
+  <div class="modal-backdrop" id="modalVerifyBadge">
+    <div class="modal-box" style="max-width: 440px; border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 0 30px rgba(56, 189, 248, 0.15), 0 20px 40px rgba(0,0,0,0.85);">
+      <div class="modal-header" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.08) 0%, transparent 100%);">
+        <div style="display: flex; align-items: center; gap: 0.55rem;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="flex-shrink: 0;">
+            <path d="M12 2l2.4 2.2 3.2-.4 1.3 3 2.9 1.4-.6 3.2 2 2.6-2 2.6.6 3.2-2.9 1.4-1.3 3-3.2-.4L12 22l-2.4-2.2-3.2.4-1.3-3-2.9-1.4.6-3.2-2-2.6 2-2.6-.6-3.2 2.9-1.4 1.3-3 3.2.4L12 2z" fill="#38bdf8"/>
+            <path d="M8.5 12.2l2.3 2.3 4.7-4.7" stroke="#090d13" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <h3 style="font-size: 0.98rem; font-weight: 800; color: #fff;">Verified Operator Credentials</h3>
+            <span class="mono" style="font-size: 0.65rem; color: var(--accent-cyan); letter-spacing: 0.05em;">SECURITY ENCLAVE AUTHENTICATED</span>
+          </div>
+        </div>
+        <button class="btn btn-sm" style="border:none; background:transparent;" onclick="closeModal('modalVerifyBadge')">✕</button>
+      </div>
+
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem; padding: 1.15rem 1.25rem;">
+        <!-- Developer Profile Header Card -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border-default); border-radius: 8px; padding: 0.9rem; display: flex; align-items: center; gap: 0.85rem;">
+          <div style="width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%); display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1rem; color: #090d13; box-shadow: 0 0 14px var(--accent-cyan-glow); flex-shrink: 0;">
+            RW
+          </div>
+          <div style="min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+              <span style="font-weight: 800; font-size: 1.05rem; color: var(--text-main);">RayneWater</span>
+              <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); border: 1px solid rgba(16, 185, 129, 0.3); font-size: 0.62rem;">SYSTEM CREATOR</span>
+            </div>
+            <div class="mono text-muted" style="font-size: 0.72rem; margin-top: 0.15rem;">Primary Architect &amp; Bench Engineer</div>
+          </div>
+        </div>
+
+        <!-- Verification Detail Rows -->
+        <div style="background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.75rem; display: flex; flex-direction: column; gap: 0.6rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem;">
+            <span class="text-muted">Authorization Status</span>
+            <span class="mono text-emerald" style="font-weight: 700; display: inline-flex; align-items: center; gap: 0.3rem;">
+              <span class="hud-dot" style="width: 6px; height: 6px;"></span>
+              Full Root Lab Privileges
+            </span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; border-top: 1px dashed var(--border-subtle); padding-top: 0.5rem;">
+            <span class="text-muted">Role &amp; Ownership</span>
+            <span class="mono text-main" style="font-weight: 600;">Lead Developer &amp; Bench Lead</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; border-top: 1px dashed var(--border-subtle); padding-top: 0.5rem;">
+            <span class="text-muted">License Type</span>
+            <span class="mono text-cyan" style="font-weight: 600;">Pro Bench Lifetime Tier</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; border-top: 1px dashed var(--border-subtle); padding-top: 0.5rem;">
+            <span class="text-muted">Hardware Enclave Key</span>
+            <span class="mono text-dim" style="font-size: 0.7rem;">RW-LAB-2026-AUTH-09A</span>
+          </div>
+        </div>
+
+        <!-- Clearance Statement -->
+        <p style="font-size: 0.76rem; color: #c9d1d9; line-height: 1.45; background: rgba(56, 189, 248, 0.05); border-left: 3px solid var(--accent-cyan); padding: 0.55rem 0.75rem; border-radius: 0 6px 6px 0;">
+          This badge confirms that <strong>RayneWater</strong> is the authentic developer of <strong>Workbench &amp; Hardware Lab</strong> with authorized access to all diagnostic rail schemas, cloud synchronization vaults, and bench tooling.
+        </p>
+      </div>
+
+      <div class="modal-footer" style="justify-content: flex-end;">
+        <button type="button" class="btn btn-sm btn-cyan" onclick="closeModal('modalVerifyBadge')">Acknowledged</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification System -->
+  <div id="toastContainer"></div>
+
+  <script>
+    /* =====================================================================
+       GLOBAL LAB STATE & LOCALSTORAGE PERSISTENCE
+       ===================================================================== */
+    const STORAGE_KEYS = {
+      JOBS: 'wbh_jobs_v1',
+      SCREWS: 'wbh_screws_v1',
+      RAILS: 'wbh_rails_v1',
+      CALC: 'wbh_calc_v1',
+      CLOUD_KEY: 'wbh_cloud_sync_key_v1',
+      CLOUD_LAST_SYNC: 'wbh_cloud_last_sync_v1',
+      FESTIVE_ACTIVE: 'wbh_festive_active_v1',
+      SCRATCHPAD: 'wbh_scratchpad_v1'
+    };
+
+    // Festival detector based on current date
+    function detectCurrentFestival() {
+      const now = new Date();
+      const month = now.getMonth(); // 0 = Jan, 11 = Dec
+      const date = now.getDate();
+
+      // November 15 – December 27: Christmas
+      if ((month === 10 && date >= 15) || (month === 11 && date <= 27)) {
+        return {
+          id: 'christmas',
+          name: '🎄 Christmas Theme',
+          desc: 'Emerald & crimson palette, snow particles & holiday boot screen.',
+          cssClass: 'theme-christmas',
+          gradient: 'linear-gradient(135deg, #d32f2f 0%, #1b5e20 100%)',
+          bootMessages: ['🎄 CALIBRATING HOLIDAY BENCH & RAILS...', '❄️ UNWRAPPING SCHEMATICS & TRAY DB...', '✨ SYNCHRONIZING OSCILLOSCOPE GAUGES...', '🎁 BENCH READY FOR REPAIRS'],
+          particleColor: 'rgba(255, 255, 255, 0.75)'
+        };
+      }
+      // December 28 – January 7: New Year's
+      if ((month === 11 && date >= 28) || (month === 0 && date <= 7)) {
+        return {
+          id: 'newyear',
+          name: '🎆 New Year’s Theme',
+          desc: 'Midnight blue & champagne gold celebration accents.',
+          cssClass: 'theme-newyear',
+          gradient: 'linear-gradient(135deg, #fbbf24 0%, #2563eb 100%)',
+          bootMessages: ['🎆 INITIALIZING NEW YEAR PROTOCOLS...', '🥂 RE-INDEXING BENCH SCHEMATICS...', '✨ COUNTDOWN TO SYSTEM ONLINE...', '🚀 READY FOR A PROSPEROUS NEW YEAR!'],
+          particleColor: 'rgba(251, 191, 36, 0.8)'
+        };
+      }
+      // January 8 – February 20: Lunar New Year / CNY
+      if ((month === 0 && date >= 8) || (month === 1 && date <= 20)) {
+        return {
+          id: 'cny',
+          name: '🧧 Lunar New Year (CNY) Theme',
+          desc: 'Imperial red & fortune gold palette with celebratory effects.',
+          cssClass: 'theme-cny',
+          gradient: 'linear-gradient(135deg, #d32f2f 0%, #ffd700 100%)',
+          bootMessages: ['🧧 CALIBRATING AUSPICIOUS POWER RAILS...', '🧨 LIGHTING BENCH DIAGNOSTIC FIRECRACKERS...', '💰 BOOSTING REPAIR YIELDS & FORTUNE...', '🏮 HUAT AH! LAB BENCH READY!'],
+          particleColor: 'rgba(255, 215, 0, 0.8)'
+        };
+      }
+      // October 15 – November 5: Deepavali or Halloween window
+      if (month === 9 && date >= 15 && date <= 31) {
+        return {
+          id: 'halloween',
+          name: '🎃 Halloween Theme',
+          desc: 'Cyber pumpkin orange & neon violet workbench.',
+          cssClass: 'theme-halloween',
+          gradient: 'linear-gradient(135deg, #ff6600 0%, #7c3aed 100%)',
+          bootMessages: ['🎃 SUMMONING BENCH HARDWARE SPIRITS...', '🕸️ CLEARING CHIP COBWEBS & RESIDUAL FLUX...', '⚡ REVIVING DORMANT LOGIC RAILS...', '👻 LAB STRESS TESTING ACTIVE!'],
+          particleColor: 'rgba(255, 102, 0, 0.7)'
+        };
+      }
+      if (month === 10 && date <= 14) {
+        return {
+          id: 'deepavali',
+          name: '🪔 Deepavali (Diwali) Theme',
+          desc: 'Vibrant diya glow, warm gold & festive purple hues.',
+          cssClass: 'theme-deepavali',
+          gradient: 'linear-gradient(135deg, #ff9900 0%, #c026d3 100%)',
+          bootMessages: ['🪔 IGNITING FESTIVAL OF LIGHTS...', '✨ PURIFYING TRACE SHORTS TO GROUND...', '🌟 EMPOWERING HARDWARE STRESS TESTERS...', '🪔 LAB BENCH RADIATING SUCCESS!'],
+          particleColor: 'rgba(255, 184, 77, 0.8)'
+        };
+      }
+      // Default to Christmas / Year-end when near late year
+      return {
+        id: 'christmas',
+        name: '🎄 Christmas Theme',
+        desc: 'Holiday emerald & crimson accents, snow particles & festive boot screen.',
+        cssClass: 'theme-christmas',
+        gradient: 'linear-gradient(135deg, #d32f2f 0%, #1b5e20 100%)',
+        bootMessages: ['🎄 CALIBRATING HOLIDAY BENCH & RAILS...', '❄️ UNWRAPPING SCHEMATICS & TRAY DB...', '✨ SYNCHRONIZING OSCILLOSCOPE GAUGES...', '🎁 BENCH READY FOR REPAIRS'],
+        particleColor: 'rgba(255, 255, 255, 0.75)'
+      };
+    }
+
+    const currentFestival = detectCurrentFestival();
+    let isFestiveActive = localStorage.getItem(STORAGE_KEYS.FESTIVE_ACTIVE) === 'true';
+
+    // Free, zero-auth cloud JSON key-value store (kvdb.io bucket)
+    const CLOUD_API_BASE = 'https://kvdb.io/AnJvE37Gq31WzY38j511E9/';
+
+    const DEFAULT_JOBS = [
+      {
+        id: 'JOB-901',
+        device: 'ASUS ROG Strix RTX 3080 OC 10GB',
+        client: 'Apex Rendering Studio',
+        serial: 'SN-M8YV0281-R2',
+        status: 'Board Repair',
+        profitType: 'Service Fee',
+        profitAmount: 165.00,
+        fault: 'Instant PC reboot under 3D load. High current draw on 8-pin PCIe #2 connector.',
+        steps: [
+          { id: 'step_1', text: 'Visual Inspection', done: true },
+          { id: 'step_2', text: 'Shorts to Ground Check', done: true },
+          { id: 'step_3', text: 'Thermal Camera Scan', done: true },
+          { id: 'step_4', text: 'Replace Shorted DrMOS on Phase 2', done: false },
+          { id: 'step_5', text: 'Final Burn-In & Stress Pass', done: false }
+        ],
+        timestamp: Date.now() - 3600000 * 24
+      },
+      {
+        id: 'JOB-902',
+        device: 'Sony PlayStation 5 Disc Edition (CFI-1116A)',
+        client: 'Private Customer (Mark T.)',
+        serial: 'PS5-728190-EUR',
+        status: 'Diagnostics',
+        profitType: 'Service Fee',
+        profitAmount: 95.00,
+        fault: 'Console beeps once, blue light pulses for 2 seconds, then immediately shuts off completely.',
+        steps: [
+          { id: 'step_1', text: 'Visual Inspection & Liquid Metal Check', done: true },
+          { id: 'step_2', text: 'Power Supply 12V Standby Rail Test', done: true },
+          { id: 'step_3', text: 'Southbridge 3.3V Diode Mode Drop', done: false },
+          { id: 'step_4', text: 'APU Barrier Re-sealing', done: false }
+        ],
+        timestamp: Date.now() - 3600000 * 48
+      },
+      {
+        id: 'JOB-903',
+        device: 'ASUS ROG Ally Z1 Extreme Handheld',
+        client: 'TechFix Retail Hub',
+        serial: 'ROG-ALLY-90412',
+        status: 'Testing',
+        profitType: 'Flip Gain/Loss',
+        profitAmount: 140.00,
+        fault: 'Right Hall stick intermittent drift; MicroSD reader non-responsive due to thermal degradation.',
+        steps: [
+          { id: 'step_1', text: 'Visual Inspection', done: true },
+          { id: 'step_2', text: 'Right Hall Stick Module Replacement', done: true },
+          { id: 'step_3', text: 'MicroSD Thermal Pad & Shield Mod', done: true },
+          { id: 'step_4', text: 'Gamepad Calibration & Stress Test', done: false }
+        ],
+        timestamp: Date.now() - 3600000 * 12
+      }
+    ];
+
+    // Default Pre-populated Reference Rails
+    const DEFAULT_RAILS = [
+      {
+        name: '12V PCIe / EPS Main Rail',
+        category: 'PC GPUs/Motherboards',
+        diodeDrop: '0.480V – 0.550V',
+        resistance: '> 5 kΩ',
+        maxInjection: '12.0V @ 2.0A max',
+        notes: 'Primary 12V supply. Short indicates blown high-side DrMOS / VRM phase or filtering cap.'
+      },
+      {
+        name: '5V Standby / Auxiliary',
+        category: 'PC GPUs/Motherboards',
+        diodeDrop: '0.380V – 0.450V',
+        resistance: '> 1.2 kΩ',
+        maxInjection: '5.0V @ 1.5A max',
+        notes: 'Generated via step-down buck converter. Supplies gate drivers, HDMI 5V, USB power.'
+      },
+      {
+        name: '3.3V PCIe / Rail',
+        category: 'PC GPUs/Motherboards',
+        diodeDrop: '0.350V – 0.420V',
+        resistance: '> 800 Ω',
+        maxInjection: '3.3V @ 1.0A max',
+        notes: 'Feeds BIOS SPI flash, logic gates, and clock generator. Low diode drop often means dead BIOS IC.'
+      },
+      {
+        name: '1.8V VDD / PLL Logic',
+        category: 'PC GPUs/Motherboards',
+        diodeDrop: '0.360V – 0.440V',
+        resistance: '~400 Ω – 1.5 kΩ',
+        maxInjection: '1.8V @ 1.0A max',
+        notes: 'Powers internal silicon PLL & clock multiplexers. Critical sequence rail before VCore turns on.'
+      },
+      {
+        name: 'VCore (GPU Core / CPU Core)',
+        category: 'PC GPUs/Motherboards',
+        diodeDrop: '0.005V – 0.040V',
+        resistance: '0.15 Ω – 0.8 Ω',
+        maxInjection: '0.8V – 0.9V @ 5A',
+        notes: 'Extremely low resistance is normal! NEVER inject more than 1.0V or silicon core will destroy.'
+      },
+      {
+        name: 'VRAM / Memory Rail (GDDR6/X)',
+        category: 'PC GPUs/Motherboards',
+        diodeDrop: '0.220V – 0.310V',
+        resistance: '25 Ω – 60 Ω',
+        maxInjection: '1.35V @ 2.0A max',
+        notes: 'Feeds GDDR memory chips. A dead VRAM chip or memory VRM will drag this rail down below 5Ω.'
+      },
+      {
+        name: 'PS5 12V Main Rail',
+        category: 'Consoles',
+        diodeDrop: '0.450V – 0.520V',
+        resistance: '> 10 kΩ',
+        maxInjection: '12.0V @ 3.0A max',
+        notes: 'Direct from power supply block. Liquid metal spillage frequently shorts 12V to APU capacitors.'
+      },
+      {
+        name: 'PS5 3.3V Standby / Southbridge',
+        category: 'Consoles',
+        diodeDrop: '0.330V – 0.410V',
+        resistance: '> 1 kΩ',
+        maxInjection: '3.3V @ 1.0A max',
+        notes: 'Main power for Southbridge (CXD90061GG). If shorted, replace Southbridge IC.'
+      },
+      {
+        name: 'Nintendo Switch Battery Rail (VBAT)',
+        category: 'Smartphones/Handhelds',
+        diodeDrop: '0.420V – 0.510V',
+        resistance: '> 20 kΩ',
+        maxInjection: '4.2V @ 1.5A max',
+        notes: 'Directly powers BQ24193 charging chip and M92T36 power delivery controller.'
+      }
+    ];
+
+    // App Data State Containers
+    let jobs = [];
+    let screwSlots = {};
+    let rails = [];
+    let currentActiveFilter = 'All';
+    let currentSelectedSlotId = null;
+
+    /* Trigger action animation on logo */
+    function triggerLogoAction() {
+      const container = document.querySelector('.brand-logo-container');
+      if (!container) return;
+      container.classList.remove('action-active');
+      // Trigger DOM reflow so repeated actions re-trigger the animation cleanly
+      void container.offsetWidth;
+      container.classList.add('action-active');
+      setTimeout(() => {
+        container.classList.remove('action-active');
+      }, 900);
+    }
+
+    /* =====================================================================
+       INITIALIZATION & STORAGE LOADERS
+       ===================================================================== */
+    function initApp() {
+      // Load or Seed Jobs with robust localStorage persistence
+      try {
+        const savedJobs = localStorage.getItem(STORAGE_KEYS.JOBS);
+        if (savedJobs) {
+          jobs = JSON.parse(savedJobs);
+        } else {
+          jobs = DEFAULT_JOBS;
+          localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs));
+        }
+      } catch (err) {
+        console.error('Failed reading jobs from localStorage:', err);
+        jobs = DEFAULT_JOBS;
+      }
+
+      // Load or Seed Screw Slots (16 slots: A1-A4, B1-B4, C1-C4, D1-D4)
+      const savedScrews = localStorage.getItem(STORAGE_KEYS.SCREWS);
+      if (savedScrews) {
+        screwSlots = JSON.parse(savedScrews);
+      } else {
+        const rows = ['A', 'B', 'C', 'D'];
+        for (let r of rows) {
+          for (let c = 1; c <= 4; c++) {
+            const key = `${r}${c}`;
+            screwSlots[key] = {
+              id: key,
+              part: '',
+              screw: '',
+              qty: 0,
+              color: 'tag-cyan',
+              occupied: false
+            };
+          }
+        }
+        // Seed a few demo slots
+        screwSlots['A1'] = { id: 'A1', part: 'GPU Backplate', screw: 'M2x4mm Phillips', qty: 7, color: 'tag-cyan', occupied: true };
+        screwSlots['A2'] = { id: 'A2', part: 'Heatsink Spring Bracket', screw: 'M2.5x6mm Tension', qty: 4, color: 'tag-crimson', occupied: true };
+        screwSlots['B1'] = { id: 'B1', part: 'PCIe IO Bracket', screw: 'M3x5mm Hex Head', qty: 3, color: 'tag-amber', occupied: true };
+      }
+
+      // Load or Seed Rails
+      const savedRails = localStorage.getItem(STORAGE_KEYS.RAILS);
+      rails = savedRails ? JSON.parse(savedRails) : DEFAULT_RAILS;
+
+      // Setup DOM & Listeners
+      setupNavigation();
+      setupDockAutoHide();
+      setupJobsBackupControls();
+      setupCloudSync();
+      setupSettingsAndTheme();
+      setupVerificationModal();
+      renderJobs();
+      renderScrewMat();
+      renderRailsTable();
+      setupCalcModule();
+      setupSmdAndPinoutModule();
+      updateHudMetrics();
+    }
+
+    /* =====================================================================
+       SETTINGS SIDEBAR, FESTIVE THEME & PARTICLES
+       ===================================================================== */
+    function setupSettingsAndTheme() {
+      const btnOpen = document.getElementById('btnOpenSettingsDrawer');
+      const btnClose = document.getElementById('btnCloseSettingsDrawer');
+      const backdrop = document.getElementById('sidebarBackdrop');
+      const drawer = document.getElementById('settingsDrawer');
+      const themeToggle = document.getElementById('toggleFestiveTheme');
+      const themeTitle = document.getElementById('festiveThemeTitle');
+      const themeDesc = document.getElementById('festiveThemeDescription');
+      const scratchpad = document.getElementById('benchScratchpad');
+      const scratchpadStatus = document.getElementById('scratchpadSaveStatus');
+
+      // Update toggle title & description based on the detected festival
+      if (themeTitle) themeTitle.textContent = currentFestival.name;
+      if (themeDesc) themeDesc.textContent = currentFestival.desc;
+
+      // Apply initial theme class if enabled
+      if (themeToggle) {
+        themeToggle.checked = isFestiveActive;
+        if (isFestiveActive) {
+          document.body.classList.add(currentFestival.cssClass);
+          startParticleAnimation();
+        }
+        themeToggle.addEventListener('change', (e) => {
+          isFestiveActive = e.target.checked;
+          localStorage.setItem(STORAGE_KEYS.FESTIVE_ACTIVE, isFestiveActive ? 'true' : 'false');
+          if (isFestiveActive) {
+            document.body.classList.add(currentFestival.cssClass);
+            startParticleAnimation();
+            showToast(`${currentFestival.name} activated!`, 'border-emerald');
+          } else {
+            // Remove any active festival theme classes
+            document.body.classList.remove('theme-christmas', 'theme-cny', 'theme-deepavali', 'theme-newyear', 'theme-halloween');
+            stopParticleAnimation();
+            showToast('Standard bench theme restored', 'border-cyan');
+          }
+          triggerLogoAction();
+        });
+      }
+
+      // Drawer Open / Close
+      const openDrawer = () => {
+        if (drawer) drawer.classList.add('active');
+        if (backdrop) backdrop.classList.add('active');
+        updateSidebarMetrics();
+        triggerLogoAction();
+      };
+
+      const closeDrawer = () => {
+        if (drawer) drawer.classList.remove('active');
+        if (backdrop) backdrop.classList.remove('active');
+      };
+
+      if (btnOpen) btnOpen.addEventListener('click', openDrawer);
+      if (btnClose) btnClose.addEventListener('click', closeDrawer);
+      if (backdrop) backdrop.addEventListener('click', closeDrawer);
+
+      // Persistent Scratchpad
+      if (scratchpad) {
+        scratchpad.value = localStorage.getItem(STORAGE_KEYS.SCRATCHPAD) || '';
+        scratchpad.addEventListener('input', () => {
+          localStorage.setItem(STORAGE_KEYS.SCRATCHPAD, scratchpad.value);
+          if (scratchpadStatus) {
+            scratchpadStatus.textContent = 'Saved';
+            scratchpadStatus.style.color = 'var(--accent-cyan)';
+            setTimeout(() => {
+              if (scratchpadStatus) scratchpadStatus.style.color = 'var(--text-muted)';
+            }, 1200);
+          }
+        });
+      }
+    }
+
+    function updateSidebarMetrics() {
+      const activeJobs = jobs.filter(j => j.status !== 'Ready').length;
+      const readyJobs = jobs.filter(j => j.status === 'Ready').length;
+      let occupiedCount = 0;
+      Object.values(screwSlots).forEach(s => {
+        if (s.occupied && s.qty > 0) occupiedCount++;
+      });
+
+      const elActive = document.getElementById('sidebarActiveJobs');
+      const elReady = document.getElementById('sidebarReadyJobs');
+      const elTrays = document.getElementById('sidebarOccupiedTrays');
+      const elFlip = document.getElementById('sidebarFlipNet');
+      const hudFlip = document.getElementById('hudFlipYieldVal');
+
+      if (elActive) elActive.textContent = activeJobs;
+      if (elReady) elReady.textContent = readyJobs;
+      if (elTrays) elTrays.textContent = `${occupiedCount}/16`;
+      if (elFlip && hudFlip) {
+        elFlip.textContent = hudFlip.textContent;
+        elFlip.className = hudFlip.className;
+      }
+    }
+
+    // Gentle Falling Snow Effect
+    // Gentle Falling Particles / Snow Effect
+    let particleAnimationId = null;
+    let particleArray = [];
+
+    function startParticleAnimation() {
+      const canvas = document.getElementById('festiveParticleCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      const resizeCanvas = () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      };
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      particleArray = [];
+      const particleCount = Math.min(65, Math.floor(window.innerWidth / 18));
+      for (let i = 0; i < particleCount; i++) {
+        particleArray.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          radius: Math.random() * 2.2 + 0.8,
+          speedY: Math.random() * 1.2 + 0.4,
+          speedX: Math.random() * 0.8 - 0.4,
+          opacity: Math.random() * 0.5 + 0.25
+        });
+      }
+
+      function renderParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particleArray.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+          ctx.fillStyle = currentFestival.particleColor || `rgba(255, 255, 255, ${p.opacity})`;
+          ctx.fill();
+
+          p.y += p.speedY;
+          p.x += p.speedX;
+
+          if (p.y > canvas.height) {
+            p.y = -5;
+            p.x = Math.random() * canvas.width;
+          }
+          if (p.x > canvas.width) p.x = 0;
+          if (p.x < 0) p.x = canvas.width;
+        });
+
+        particleAnimationId = requestAnimationFrame(renderParticles);
+      }
+
+      if (particleAnimationId) cancelAnimationFrame(particleAnimationId);
+      renderParticles();
+    }
+
+    function stopParticleAnimation() {
+      if (particleAnimationId) {
+        cancelAnimationFrame(particleAnimationId);
+        particleAnimationId = null;
+      }
+      const canvas = document.getElementById('festiveParticleCanvas');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    /* =====================================================================
+       UI NAVIGATION TABS
+       ===================================================================== */
+    function setupNavigation() {
+      const dockBtns = document.querySelectorAll('.dock-btn');
+      const tabViews = document.querySelectorAll('.tab-view');
+      const dockItems = document.querySelectorAll('.dock-item');
+
+      // Click tab switching
+      dockBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetId = btn.getAttribute('data-tab');
+          dockBtns.forEach(b => b.classList.remove('active'));
+          tabViews.forEach(v => v.classList.remove('active'));
+
+          btn.classList.add('active');
+          const targetView = document.getElementById(targetId);
+          if (targetView) targetView.classList.add('active');
+
+          // Toggle visibility of the pinned controls based on whether Active Repair Bench is selected
+          const headerControls = document.getElementById('headerBenchControls');
+          if (headerControls) {
+            headerControls.style.display = targetId === 'tab-bench' ? 'block' : 'none';
+          }
+
+          // Trigger logo action animation on navigation
+          triggerLogoAction();
+        });
+      });
+
+      // Press and hold gesture support for touch & mobile devices
+      dockItems.forEach(item => {
+        let pressTimer = null;
+        let didLongPress = false;
+
+        const startPress = () => {
+          didLongPress = false;
+          pressTimer = setTimeout(() => {
+            didLongPress = true;
+            dockItems.forEach(i => i.classList.remove('show-label'));
+            item.classList.add('show-label');
+            if (navigator.vibrate) navigator.vibrate(20);
+          }, 320); // 320ms press-and-hold
+        };
+
+        const cancelPress = () => {
+          if (pressTimer) clearTimeout(pressTimer);
+          if (didLongPress) {
+            setTimeout(() => {
+              item.classList.remove('show-label');
+            }, 1200);
+          }
+        };
+
+        item.addEventListener('touchstart', startPress, { passive: true });
+        item.addEventListener('touchend', cancelPress);
+        item.addEventListener('touchcancel', cancelPress);
+        item.addEventListener('touchmove', () => {
+          if (pressTimer) clearTimeout(pressTimer);
+        });
+      });
+    }
+
+    function setupDockAutoHide() {
+      const dockWrapper = document.querySelector('.dock-wrapper');
+      if (!dockWrapper) return;
+
+      const handleScroll = () => {
+        const scrollY = window.scrollY || window.pageYOffset;
+        const totalHeight = document.documentElement.scrollHeight;
+        const viewportHeight = window.innerHeight;
+        // Check if user has scrolled close to the bottom (within 90px threshold)
+        const isAtBottom = (scrollY + viewportHeight) >= (totalHeight - 90);
+
+        if (isAtBottom && totalHeight > viewportHeight + 120) {
+          dockWrapper.classList.add('dock-hidden');
+        } else {
+          dockWrapper.classList.remove('dock-hidden');
+        }
+      };
+
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      window.addEventListener('resize', handleScroll, { passive: true });
+    }
+
+    function updateHudMetrics() {
+      // Synchronize Station Info metrics inside the settings sidebar
+      updateSidebarMetrics();
+    }
+
+    /* =====================================================================
+       MODULE 5: SMD DECODER, COLOR BANDS & BENCH PINOUT REFERENCE
+       ===================================================================== */
+    const EIA96_CODES = {
+      '01': 100, '02': 102, '03': 105, '04': 107, '05': 110, '06': 113, '07': 115, '08': 118, '09': 121, '10': 124,
+      '11': 127, '12': 130, '13': 133, '14': 137, '15': 140, '16': 143, '17': 147, '18': 150, '19': 154, '20': 158,
+      '21': 162, '22': 165, '23': 169, '24': 174, '25': 178, '26': 182, '27': 187, '28': 191, '29': 196, '30': 200,
+      '31': 205, '32': 210, '33': 215, '34': 221, '35': 226, '36': 232, '37': 237, '38': 243, '39': 249, '40': 255,
+      '41': 261, '42': 267, '43': 274, '44': 280, '45': 287, '46': 294, '47': 301, '48': 309, '49': 316, '50': 324,
+      '51': 332, '52': 340, '53': 348, '54': 357, '55': 365, '56': 374, '57': 383, '58': 392, '59': 402, '60': 412,
+      '61': 422, '62': 432, '63': 442, '64': 453, '65': 464, '66': 475, '67': 487, '68': 499, '69': 511, '70': 523,
+      '71': 536, '72': 549, '73': 562, '74': 576, '75': 590, '76': 604, '77': 619, '78': 634, '79': 649, '80': 665,
+      '81': 681, '82': 698, '83': 715, '84': 732, '85': 750, '86': 768, '87': 787, '88': 806, '89': 825, '90': 845,
+      '91': 866, '92': 887, '93': 909, '94': 931, '95': 953, '96': 976
+    };
+
+    const EIA96_MULTIPLIERS = {
+      'Z': 0.001, 'Y': 0.01, 'X': 0.1, 'A': 1, 'B': 10, 'C': 100, 'D': 1000, 'E': 10000, 'F': 100000
+    };
+
+    const PINOUT_DATA = {
+      usbc: {
+        title: 'USB Type-C Reversible 24-Pin Receptacle',
+        desc: 'Essential for diagnostic probe checks (CC1/CC2 for PD negotiation 5V/9V/15V/20V, VBUS for power delivery).',
+        rows: [
+          { pin: 'A1 / B12', name: 'GND', type: 'Ground', notes: 'Should read 0.000V in diode mode to chassis ground.' },
+          { pin: 'A4 / A9 / B4 / B9', name: 'VBUS (5V - 20V)', type: 'Power', notes: '5.0V safe standby; negotiates up to 20V @ 5A via USB PD.' },
+          { pin: 'A5 / B5', name: 'CC1 / CC2', type: 'PD Logic', notes: 'Configuration Channel. Crucial: short or diode failure causes 0V / no charging.' },
+          { pin: 'A6 / A7', name: 'D+ / D- (USB 2.0)', type: 'Data', notes: 'High-speed differential pair. Diode drop ~0.600V to GND.' },
+          { pin: 'A2 / A3 / B10 / B11', name: 'TX1 / RX1 / RX2 / TX2', type: 'SuperSpeed', notes: 'High-speed 10Gbps+ lines. Protected by TVS ESD arrays.' }
+        ]
+      },
+      bios: {
+        title: 'SPI Flash EEPROM (SOIC-8 / WSON-8)',
+        desc: 'Standard BIOS / Firmware chip on motherboards, GPUs, laptops, and consoles (Winbond, Macronix, MXIC).',
+        rows: [
+          { pin: 'Pin 1', name: '/CS (Chip Select)', type: 'Control', notes: 'Active low. Pulled high to VCC when inactive.' },
+          { pin: 'Pin 2', name: 'DO / SO (Data Out)', type: 'Data', notes: 'Serial data out back to PCH, GPU core, or EC.' },
+          { pin: 'Pin 3', name: '/WP (Write Protect)', type: 'Control', notes: 'Hardware write protect. Usually tied to VCC.' },
+          { pin: 'Pin 4', name: 'GND', type: 'Ground', notes: 'Ground reference point.' },
+          { pin: 'Pin 5', name: 'DI / SI (Data In)', type: 'Data', notes: 'Serial data in from master controller.' },
+          { pin: 'Pin 6', name: 'CLK (Serial Clock)', type: 'Clock', notes: 'High-frequency clock pulses during boot enumeration.' },
+          { pin: 'Pin 7', name: '/HOLD or /RESET', type: 'Control', notes: 'Pause communication. Pulled high to VCC.' },
+          { pin: 'Pin 8', name: 'VCC (3.3V or 1.8V)', type: 'Power', notes: 'Check whether chip is 3.3V or 1.8V before programmer hookup!' }
+        ]
+      },
+      hdmi: {
+        title: 'HDMI Type-A 19-Pin Port',
+        desc: 'Troubleshoot no-display and console / GPU video output faults.',
+        rows: [
+          { pin: 'Pin 18', name: '+5V Power Rail', type: 'Power', notes: 'Supplies 5V to display DDC lines. Often blown fuse if 0V.' },
+          { pin: 'Pin 19', name: 'HPD (Hot Plug Detect)', type: 'Sense', notes: 'Asserts ~3.3V to 5V when TV/monitor is plugged in.' },
+          { pin: 'Pin 15 / 16', name: 'SCL / SDA (DDC)', type: 'I2C Bus', notes: 'EDID handshake bus for resolution & refresh rate detection.' },
+          { pin: 'Pins 1 - 12', name: 'TMDS Data 0/1/2 & Clock', type: 'Video Pairs', notes: 'High-speed differential lines. Diode drops should closely match (~0.450V).' }
+        ]
+      },
+      pcie: {
+        title: 'PCIe 8-Pin Auxiliary Power Connector',
+        desc: 'Main auxiliary 12V supply for desktop graphics cards.',
+        rows: [
+          { pin: 'Pins 1, 2, 3', name: '+12V DC Rails', type: 'Power', notes: 'Direct from PSU 12V rail. Short to GND indicates blown DrMOS/FET.' },
+          { pin: 'Pin 4', name: 'Sense1', type: 'Detection', notes: 'Ground sense line indicating an 8-pin cable is attached.' },
+          { pin: 'Pins 5, 6, 7', name: 'COM / GND', type: 'Ground', notes: 'Primary high-current ground return path.' },
+          { pin: 'Pin 8', name: 'Sense0', type: 'Detection', notes: 'Ground sense line confirming 150W capability.' }
+        ]
+      },
+      atx24: {
+        title: 'ATX 24-Pin Motherboard Power Header',
+        desc: 'Main desktop PC power supply pinout and diagnostic rail lines.',
+        rows: [
+          { pin: 'Pin 16', name: 'PS_ON# (Green)', type: 'Control', notes: 'Short to GND (Black) with paperclip to manually jump PSU awake.' },
+          { pin: 'Pin 9', name: '+5VSB (Purple)', type: 'Standby', notes: 'Always on 5V even when PC is turned off. Powers EC and power button.' },
+          { pin: 'Pin 8', name: 'PWR_OK (Gray)', type: 'Sense', notes: 'High (+5V) signals to motherboard that all voltage rails are clean & stable.' },
+          { pin: 'Pins 1, 2, 13', name: '+3.3V (Orange)', type: 'Power', notes: 'Supplies chipset, logic controllers, and PCIe slots.' },
+          { pin: 'Pins 4, 6, 19, 20', name: '+5V (Red)', type: 'Power', notes: 'Drives SATA drives, legacy USB controllers, and auxiliary circuits.' },
+          { pin: 'Pins 10, 11', name: '+12V (Yellow)', type: 'Power', notes: 'Main 12V bus for motherboard voltage regulators.' }
+        ]
+      }
+    };
+
+    function setupSmdAndPinoutModule() {
+      const btnDecode = document.getElementById('btnDecodeSmd');
+      const input = document.getElementById('smdCodeInput');
+
+      if (btnDecode) btnDecode.addEventListener('click', decodeSmdInput);
+      if (input) {
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            decodeSmdInput();
+          }
+        });
+      }
+
+      calculateColorBands();
+      renderSelectedPinout();
+    }
+
+    /* SMD Decoder Functions */
+    function quickSmd(code) {
+      const input = document.getElementById('smdCodeInput');
+      if (input) {
+        input.value = code;
+        decodeSmdInput();
+      }
+    }
+
+    function decodeSmdInput() {
+      const raw = (document.getElementById('smdCodeInput')?.value || '').trim().toUpperCase();
+      const resEl = document.getElementById('smdResistorResult');
+      const capEl = document.getElementById('smdCapacitorResult');
+      const expEl = document.getElementById('smdExplanation');
+      if (!raw || !resEl || !capEl) return;
+
+      // 1. Check EIA-96 (2 digits + 1 letter, e.g. 01C)
+      const eiaMatch = raw.match(/^([0-9]{2})([A-F|X-Z])$/);
+      if (eiaMatch) {
+        const code = eiaMatch[1];
+        const multChar = eiaMatch[2];
+        const base = EIA96_CODES[code];
+        const mult = EIA96_MULTIPLIERS[multChar];
+        if (base && mult !== undefined) {
+          const ohms = base * mult;
+          resEl.textContent = formatOhms(ohms) + ' (±1%)';
+          capEl.textContent = 'N/A (EIA-96 Precision Resistor)';
+          if (expEl) expEl.textContent = `EIA-96 1% precision code. Base [${code}] = ${base} × multiplier [${multChar}] (${mult}) = ${ohms} Ω.`;
+          return;
+        }
+      }
+
+      // 2. Check R notation (e.g. 4R7, 0R22, R05)
+      if (raw.includes('R')) {
+        const parts = raw.split('R');
+        const num = parseFloat((parts[0] || '0') + '.' + (parts[1] || '0'));
+        if (!isNaN(num)) {
+          resEl.textContent = formatOhms(num) + ' (±5%)';
+          capEl.textContent = 'N/A';
+          if (expEl) expEl.textContent = `R-notation: 'R' denotes the decimal point. Value = ${num} Ω.`;
+          return;
+        }
+      }
+
+      // 3. Numeric 3-digit or 4-digit code (e.g. 472, 1001, 104)
+      if (/^\d{3,4}$/.test(raw)) {
+        const digits = raw.slice(0, -1);
+        const exp = parseInt(raw.slice(-1), 10);
+        const ohms = parseInt(digits, 10) * Math.pow(10, exp);
+        resEl.textContent = formatOhms(ohms) + (raw.length === 3 ? ' (±5%)' : ' (±1%)');
+
+        // Capacitor equivalent (in pF)
+        const pf = parseInt(digits, 10) * Math.pow(10, exp);
+        let capStr = `${pf.toLocaleString()} pF`;
+        if (pf >= 1000 && pf < 1000000) {
+          capStr += ` / ${(pf / 1000).toFixed(1)} nF`;
+        } else if (pf >= 1000000) {
+          capStr += ` / ${(pf / 1000000).toFixed(2)} µF`;
+        }
+        capEl.textContent = capStr;
+
+        if (expEl) {
+          expEl.textContent = `${raw.length}-digit standard code. Significant digits (${digits}) × 10^${exp} = ${ohms.toLocaleString()} Ω.`;
+        }
+        return;
+      }
+
+      // 4. Single digit 0
+      if (raw === '0') {
+        resEl.textContent = '0 Ω (Jumper / Zero-Ohm Link)';
+        capEl.textContent = 'N/A';
+        if (expEl) expEl.textContent = 'Zero-ohm SMD bridging resistor (PCB jumper).';
+        return;
+      }
+
+      resEl.textContent = 'Invalid / Unknown Code';
+      capEl.textContent = '--';
+      if (expEl) expEl.textContent = 'Unrecognized marking. Please test in circuit using resistance mode.';
+    }
+
+    function formatOhms(val) {
+      if (val >= 1000000) return (val / 1000000).toFixed(2).replace(/\.00$/, '') + ' MΩ';
+      if (val >= 1000) return (val / 1000).toFixed(2).replace(/\.00$/, '') + ' kΩ';
+      return val.toFixed(2).replace(/\.00$/, '') + ' Ω';
+    }
+
+    function calculateColorBands() {
+      const b1 = parseInt(document.getElementById('band1Select')?.value || '1', 10);
+      const b2 = parseInt(document.getElementById('band2Select')?.value || '0', 10);
+      const mult = parseFloat(document.getElementById('band3Select')?.value || '100');
+      const tol = parseFloat(document.getElementById('band4Select')?.value || '5');
+
+      const colorMap = {
+        0: '#000000', 1: '#964b00', 2: '#ff0000', 3: '#ff7b00', 4: '#ffd700',
+        5: '#10b981', 6: '#0284c7', 7: '#a855f7', 8: '#8b949e', 9: '#ffffff',
+        '0.1': '#d4af37', '0.01': '#c0c0c0', '10': '#964b00', '100': '#ff0000',
+        '1000': '#ff7b00', '10000': '#ffd700', '100000': '#10b981', '1000000': '#0284c7'
+      };
+
+      const p1 = document.getElementById('resBand1Preview');
+      const p2 = document.getElementById('resBand2Preview');
+      const p3 = document.getElementById('resBand3Preview');
+      const p4 = document.getElementById('resBand4Preview');
+
+      if (p1) p1.style.background = colorMap[b1] || '#964b00';
+      if (p2) p2.style.background = colorMap[b2] || '#000000';
+      if (p3) p3.style.background = colorMap[String(mult)] || '#ff0000';
+      if (p4) p4.style.background = tol === 5 ? '#ffd700' : (tol === 10 ? '#c0c0c0' : '#964b00');
+
+      const ohms = (b1 * 10 + b2) * mult;
+      const minO = ohms * (1 - tol / 100);
+      const maxO = ohms * (1 + tol / 100);
+
+      const valEl = document.getElementById('colorBandResultValue');
+      const rangeEl = document.getElementById('colorBandRange');
+      if (valEl) valEl.textContent = formatOhms(ohms);
+      if (rangeEl) rangeEl.textContent = `${formatOhms(minO)} – ${formatOhms(maxO)} (±${tol}%)`;
+    }
+
+    function renderSelectedPinout() {
+      const key = document.getElementById('pinoutSelector')?.value || 'usbc';
+      const data = PINOUT_DATA[key];
+      const container = document.getElementById('pinoutDisplayContainer');
+      if (!data || !container) return;
+
+      container.innerHTML = `
+        <div style="background: var(--bg-panel); padding: 0.65rem 0.85rem; border-bottom: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+          <strong style="color: var(--accent-cyan); font-size: 0.84rem;">${escapeHtml(data.title)}</strong>
+          <span style="font-size: 0.72rem; color: var(--text-dim);">${escapeHtml(data.desc)}</span>
+        </div>
+        <table class="ref-table">
+          <thead>
+            <tr>
+              <th style="width: 120px;">Pin / Contact</th>
+              <th>Signal Name</th>
+              <th>Line Type</th>
+              <th>Diagnostic / Testing Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${data.rows.map(r => `
+              <tr>
+                <td class="mono font-bold" style="color: var(--accent-cyan);">${escapeHtml(r.pin)}</td>
+                <td class="mono" style="font-weight: 700;">${escapeHtml(r.name)}</td>
+                <td><span class="badge" style="background:#21262d; color: var(--text-muted);">${escapeHtml(r.type)}</span></td>
+                <td style="color: #c9d1d9; font-size: 0.76rem;">${escapeHtml(r.notes)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    /* =====================================================================
+       MODULE 1: REPAIR BENCH & JOB RENDERING
+       ===================================================================== */
+    function renderJobs() {
+      const container = document.getElementById('jobsGridContainer');
+      if (!container) return;
+
+      const searchTerm = (document.getElementById('jobSearchInput')?.value || '').toLowerCase().trim();
+      
+      const filtered = jobs.filter(job => {
+        const matchesFilter = currentActiveFilter === 'All' || job.status === currentActiveFilter;
+        const matchesSearch = !searchTerm || 
+          job.device.toLowerCase().includes(searchTerm) || 
+          job.client.toLowerCase().includes(searchTerm) || 
+          (job.serial && job.serial.toLowerCase().includes(searchTerm)) ||
+          job.fault.toLowerCase().includes(searchTerm);
+        return matchesFilter && matchesSearch;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="grid-column: 1 / -1; padding: 3rem 1rem; text-align: center; color: var(--text-dim); background: var(--bg-panel); border: 1px dashed var(--border-default); border-radius: 10px;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 0.75rem;"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            <p style="font-size: 0.9rem; font-weight: 600; color: var(--text-muted);">No bench jobs match criteria.</p>
+            <p style="font-size: 0.75rem; margin-top: 0.25rem;">Adjust search filters or click "+ New Job" to log incoming hardware.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(job => {
+        const totalSteps = (job.steps || []).length;
+        const completedSteps = (job.steps || []).filter(s => s.done).length;
+        const pct = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
+        const isFlip = job.profitType === 'Flip Gain/Loss';
+
+        return `
+          <div class="job-card" data-job-id="${job.id}">
+            <div class="job-card-header">
+              <div>
+                <div class="job-device">${escapeHtml(job.device)}</div>
+                <div class="job-submeta">
+                  <span>${escapeHtml(job.client)}</span>
+                  ${job.serial ? `<span>• SN: ${escapeHtml(job.serial)}</span>` : ''}
+                </div>
+              </div>
+              <span class="badge ${job.status === 'Ready' ? 'text-emerald' : 'text-orange'}" style="background: rgba(255,123,0,0.12); border: 1px solid rgba(255,123,0,0.3); font-size: 0.65rem;">
+                ${escapeHtml(job.status)}
+              </span>
+            </div>
+
+            <div class="job-fault-box">
+              ${escapeHtml(job.fault)}
+            </div>
+
+            <div>
+              <div class="diagnostic-checklist-title">
+                <span>Checklist Progress</span>
+                <span>${completedSteps}/${totalSteps} (${pct}%)</span>
+              </div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" style="width: ${pct}%;"></div>
+              </div>
+            </div>
+
+            <div class="job-card-footer">
+              <div class="mono" style="font-weight: 700; color: ${isFlip ? 'var(--accent-cyan)' : 'var(--accent-emerald)'}; font-size: 0.8rem;">
+                ${isFlip ? 'FLIP NET:' : 'FEE:'} $${(job.profitAmount || 0).toFixed(2)}
+              </div>
+              <div style="display: flex; gap: 0.4rem;">
+                <button class="btn btn-sm btn-cyan" onclick="inspectJobModal('${job.id}')" style="padding: 0.25rem 0.55rem; font-size: 0.72rem;">Inspect</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteJobPrompt('${job.id}')" style="padding: 0.25rem 0.45rem; font-size: 0.72rem;">✕</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function setupJobsBackupControls() {
+      const searchInput = document.getElementById('jobSearchInput');
+      if (searchInput) {
+        searchInput.addEventListener('input', () => renderJobs());
+      }
+
+      const chips = document.querySelectorAll('.filter-chip-btn');
+      chips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          chips.forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          currentActiveFilter = chip.getAttribute('data-filter') || 'All';
+          renderJobs();
+        });
+      });
+
+      const btnNew = document.getElementById('btnOpenNewJobModal');
+      if (btnNew) {
+        btnNew.addEventListener('click', () => {
+          document.getElementById('formJobCard')?.reset();
+          document.getElementById('jobFieldId').value = '';
+          document.getElementById('jobModalTitle').textContent = 'Log New Bench Job';
+          openModal('modalJobEditor');
+        });
+      }
+
+      const btnExport = document.getElementById('btnExportJobsBackup');
+      if (btnExport) {
+        btnExport.addEventListener('click', () => {
+          const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(jobs, null, 2));
+          const dlAnchor = document.createElement('a');
+          dlAnchor.setAttribute("href", dataStr);
+          dlAnchor.setAttribute("download", `workbench_jobs_backup_${new Date().toISOString().slice(0,10)}.json`);
+          document.body.appendChild(dlAnchor);
+          dlAnchor.click();
+          dlAnchor.remove();
+          showToast('Jobs backup exported successfully!', 'border-emerald');
+        });
+      }
+
+      const btnImport = document.getElementById('btnImportJobsBackup');
+      const importInput = document.getElementById('importJobsFileInput');
+      if (btnImport && importInput) {
+        btnImport.addEventListener('click', () => importInput.click());
+        importInput.addEventListener('change', (e) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            try {
+              const imported = JSON.parse(event.target.result);
+              if (Array.isArray(imported)) {
+                jobs = imported;
+                localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs));
+                renderJobs();
+                updateHudMetrics();
+                showToast(`Restored ${jobs.length} jobs from backup!`, 'border-emerald');
+              }
+            } catch (err) {
+              showToast('Invalid backup JSON file', 'border-crimson');
+            }
+          };
+          reader.readAsText(file);
+        });
+      }
+    }
+
+    function handleSaveJob(e) {
+      e.preventDefault();
+      const idField = document.getElementById('jobFieldId').value;
+      const device = document.getElementById('jobFieldDevice').value.trim();
+      const client = document.getElementById('jobFieldClient').value.trim();
+      const serial = document.getElementById('jobFieldSerial').value.trim();
+      const status = document.getElementById('jobFieldStatus').value;
+      const profitType = document.getElementById('jobFieldProfitType').value;
+      const profitAmount = parseFloat(document.getElementById('jobFieldProfitAmount').value) || 0;
+      const fault = document.getElementById('jobFieldFault').value.trim();
+
+      if (idField) {
+        const idx = jobs.findIndex(j => j.id === idField);
+        if (idx !== -1) {
+          jobs[idx] = { ...jobs[idx], device, client, serial, status, profitType, profitAmount, fault };
+        }
+      } else {
+        const newJob = {
+          id: 'JOB-' + Math.floor(100 + Math.random() * 900),
+          device,
+          client,
+          serial,
+          status,
+          profitType,
+          profitAmount,
+          fault,
+          steps: [
+            { id: 'step_1', text: 'Visual & In-Depth Inspection', done: false },
+            { id: 'step_2', text: 'Diode Mode & Rail Diagnostics', done: false },
+            { id: 'step_3', text: 'Targeted Component Repair / Replacement', done: false },
+            { id: 'step_4', text: 'Thermal & Functional Validation', done: false }
+          ],
+          timestamp: Date.now()
+        };
+        jobs.unshift(newJob);
+      }
+
+      localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs));
+      renderJobs();
+      updateHudMetrics();
+      closeModal('modalJobEditor');
+      showToast('Job card saved successfully!', 'border-emerald');
+      pushCloudDataSilent();
+    }
+
+    function deleteJobPrompt(id) {
+      jobs = jobs.filter(j => j.id !== id);
+      localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs));
+      renderJobs();
+      updateHudMetrics();
+      showToast('Job removed from workbench', 'border-orange');
+      pushCloudDataSilent();
+    }
+
+    let inspectedJobId = null;
+
+    function inspectJobModal(id) {
+      inspectedJobId = id;
+      const job = jobs.find(j => j.id === id);
+      if (!job) return;
+
+      document.getElementById('detailJobDevice').textContent = job.device;
+      document.getElementById('detailJobStatusBadge').textContent = job.status;
+      document.getElementById('detailJobClient').textContent = job.client;
+      document.getElementById('detailJobSerial').textContent = job.serial || 'N/A';
+      document.getElementById('detailJobFault').textContent = job.fault;
+      document.getElementById('detailJobProfitLabel').textContent = job.profitType === 'Flip Gain/Loss' ? 'ESTIMATED FLIP NET' : 'SERVICE FEE CHARGED';
+      document.getElementById('detailJobProfitAmount').textContent = `$${(job.profitAmount || 0).toFixed(2)}`;
+      document.getElementById('detailJobFooterId').textContent = `ID: ${job.id}`;
+      document.getElementById('detailJobTimestamp').textContent = new Date(job.timestamp || Date.now()).toLocaleDateString();
+
+      renderJobDetailSteps(job);
+
+      const btnEdit = document.getElementById('btnDetailEditJob');
+      if (btnEdit) {
+        btnEdit.onclick = () => {
+          closeModal('modalJobDetail');
+          document.getElementById('jobFieldId').value = job.id;
+          document.getElementById('jobFieldDevice').value = job.device;
+          document.getElementById('jobFieldClient').value = job.client;
+          document.getElementById('jobFieldSerial').value = job.serial || '';
+          document.getElementById('jobFieldStatus').value = job.status;
+          document.getElementById('jobFieldProfitType').value = job.profitType;
+          document.getElementById('jobFieldProfitAmount').value = job.profitAmount || 0;
+          document.getElementById('jobFieldFault').value = job.fault;
+          document.getElementById('jobModalTitle').textContent = `Edit Job: ${job.id}`;
+          openModal('modalJobEditor');
+        };
+      }
+
+      const btnAddStep = document.getElementById('btnDetailAddStep');
+      const stepInput = document.getElementById('detailNewStepInput');
+      if (btnAddStep && stepInput) {
+        btnAddStep.onclick = () => {
+          const val = stepInput.value.trim();
+          if (!val) return;
+          if (!job.steps) job.steps = [];
+          job.steps.push({ id: 'step_' + Date.now(), text: val, done: false });
+          stepInput.value = '';
+          localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs));
+          renderJobDetailSteps(job);
+          renderJobs();
+          pushCloudDataSilent();
+        };
+      }
+
+      const btnMarkReady = document.getElementById('btnDetailMarkReady');
+      if (btnMarkReady) {
+        btnMarkReady.onclick = () => {
+          job.status = 'Ready';
+          localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs));
+          renderJobDetailSteps(job);
+          renderJobs();
+          updateHudMetrics();
+          showToast(`Marked ${job.id} as Ready!`, 'border-emerald');
+          pushCloudDataSilent();
+        };
+      }
+
+      openModal('modalJobDetail');
+    }
+
+    function renderJobDetailSteps(job) {
+      const container = document.getElementById('detailJobChecklistItems');
+      const scoreEl = document.getElementById('detailJobChecklistScore');
+      const readyBanner = document.getElementById('detailJobCompleteBanner');
+      if (!container) return;
+
+      const steps = job.steps || [];
+      const completed = steps.filter(s => s.done).length;
+      if (scoreEl) scoreEl.textContent = `${completed}/${steps.length} Passed`;
+
+      if (readyBanner) {
+        readyBanner.style.display = (steps.length > 0 && completed === steps.length && job.status !== 'Ready') ? 'flex' : 'none';
+      }
+
+      container.innerHTML = steps.map((s, idx) => `
+        <div class="drag-step-item" draggable="true" data-index="${idx}" data-step-id="${s.id}" style="display: flex; align-items: center; justify-content: space-between; background: var(--bg-card); padding: 0.45rem 0.65rem; border-radius: 6px; border: 1px solid var(--border-default);">
+          <div class="drag-handle" title="Drag to reorder" style="padding-left: 0; padding-right: 0.5rem;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="5" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="19" r="1"/>
+              <circle cx="15" cy="5" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="19" r="1"/>
+            </svg>
+          </div>
+          <label class="check-label ${s.done ? 'checked' : ''}" style="flex: 1;">
+            <input type="checkbox" ${s.done ? 'checked' : ''} onchange="toggleJobStep('${job.id}', '${s.id}')">
+            <span>${escapeHtml(s.text)}</span>
+          </label>
+          <button type="button" class="btn btn-sm" onclick="removeJobStep('${job.id}', '${s.id}')" style="border:none; color: var(--text-dim); padding: 0.1rem 0.4rem;">✕</button>
+        </div>
+      `).join('');
+
+      setupStepDragAndDrop(job, container);
+    }
+
+    function setupStepDragAndDrop(job, container) {
+      let draggedItem = null;
+      let dragSrcIndex = null;
+      const items = container.querySelectorAll('.drag-step-item');
+
+      items.forEach(item => {
+        // Desktop HTML5 Drag Events
+        item.addEventListener('dragstart', (e) => {
+          draggedItem = item;
+          dragSrcIndex = parseInt(item.getAttribute('data-index'), 10);
+          item.classList.add('is-dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', dragSrcIndex);
+        });
+
+        item.addEventListener('dragend', () => {
+          items.forEach(i => {
+            i.classList.remove('is-dragging');
+            i.classList.remove('drag-over');
+          });
+          draggedItem = null;
+        });
+
+        item.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          item.classList.add('drag-over');
+        });
+
+        item.addEventListener('dragleave', () => {
+          item.classList.remove('drag-over');
+        });
+
+        item.addEventListener('drop', (e) => {
+          e.preventDefault();
+          item.classList.remove('drag-over');
+          const targetIndex = parseInt(item.getAttribute('data-index'), 10);
+          if (draggedItem && dragSrcIndex !== null && dragSrcIndex !== targetIndex) {
+            const moved = job.steps.splice(dragSrcIndex, 1)[0];
+            job.steps.splice(targetIndex, 0, moved);
+            localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs));
+            renderJobDetailSteps(job);
+            renderJobs();
+            pushCloudDataSilent();
+          }
+        });
+
+        // Mobile Touch-Drag Handling
+        const handle = item.querySelector('.drag-handle');
+        if (handle) {
+          let touchStartY = 0;
+          let currentTargetIndex = null;
+
+          handle.addEventListener('touchstart', (e) => {
+            touchStartY = e.touches[0].clientY;
+            dragSrcIndex = parseInt(item.getAttribute('data-index'), 10);
+            item.classList.add('is-dragging');
+          }, { passive: true });
+
+          handle.addEventListener('touchmove', (e) => {
+            const touchY = e.touches[0].clientY;
+            items.forEach(i => i.classList.remove('drag-over'));
+            const elementBelow = document.elementFromPoint(e.touches[0].clientX, touchY);
+            const targetStep = elementBelow ? elementBelow.closest('.drag-step-item') : null;
+            if (targetStep && targetStep !== item) {
+              targetStep.classList.add('drag-over');
+              currentTargetIndex = parseInt(targetStep.getAttribute('data-index'), 10);
+            }
+          }, { passive: true });
+
+          handle.addEventListener('touchend', () => {
+            item.classList.remove('is-dragging');
+            items.forEach(i => i.classList.remove('drag-over'));
+            if (currentTargetIndex !== null && dragSrcIndex !== null && dragSrcIndex !== currentTargetIndex) {
+              const moved = job.steps.splice(dragSrcIndex, 1)[0];
+              job.steps.splice(currentTargetIndex, 0, moved);
+              localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs));
+              renderJobDetailSteps(job);
+              renderJobs();
+              pushCloudDataSilent();
+            }
+            dragSrcIndex = null;
+            currentTargetIndex = null;
+          });
+        }
+      });
+    }
+
+    function toggleJobStep(jobId, stepId) {
+      const job = jobs.find(j => j.id === jobId);
+      if (!job || !job.steps) return;
+      const step = job.steps.find(s => s.id === stepId);
+      if (step) {
+        step.done = !step.done;
+        localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs));
+        renderJobDetailSteps(job);
+        renderJobs();
+        pushCloudDataSilent();
+      }
+    }
+
+    function removeJobStep(jobId, stepId) {
+      const job = jobs.find(j => j.id === jobId);
+      if (!job || !job.steps) return;
+      job.steps = job.steps.filter(s => s.id !== stepId);
+      localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs));
+      renderJobDetailSteps(job);
+      renderJobs();
+      pushCloudDataSilent();
+    }
+
+    /* =====================================================================
+       MODULE 2: SCREW & FASTENER MAT
+       ===================================================================== */
+    function renderScrewMat() {
+      const container = document.getElementById('screwGridMat');
+      if (!container) return;
+
+      container.innerHTML = Object.keys(screwSlots).map(slotId => {
+        const slot = screwSlots[slotId];
+        const isOcc = slot.occupied && slot.qty > 0;
+        return `
+          <div class="screw-slot ${isOcc ? 'occupied ' + slot.color : ''}" onclick="selectScrewSlot('${slotId}')">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span class="slot-id">${slotId}</span>
+              ${isOcc ? `<span class="slot-qty-badge">${slot.qty}x</span>` : ''}
+            </div>
+            <div class="slot-content-preview">
+              <svg class="slot-icon" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="m9 9 6 6M15 9l-6 6"/></svg>
+              <div class="slot-part-name">${isOcc ? escapeHtml(slot.part) : 'Empty'}</div>
+              <div class="slot-screw-type">${isOcc ? escapeHtml(slot.screw) : '--'}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectScrewSlot(slotId) {
+      currentSelectedSlotId = slotId;
+      const slot = screwSlots[slotId];
+      const indicator = document.getElementById('selectedSlotIndicator');
+      const details = document.getElementById('slotInspectorDetails');
+      if (indicator) indicator.textContent = slotId;
+
+      if (details) {
+        if (slot.occupied && slot.qty > 0) {
+          details.innerHTML = `
+            <div style="text-align: left; display: flex; flex-direction: column; gap: 0.6rem;">
+              <div>
+                <span class="hud-label">Origin / Component</span>
+                <div style="font-size: 1rem; font-weight: 700; color: var(--text-main);">${escapeHtml(slot.part)}</div>
+              </div>
+              <div>
+                <span class="hud-label">Fastener Type & Thread</span>
+                <div class="mono text-cyan" style="font-size: 0.85rem;">${escapeHtml(slot.screw || 'Standard')}</div>
+              </div>
+              <div style="display: flex; justify-content: space-between;">
+                <div>
+                  <span class="hud-label">Stored Quantity</span>
+                  <div class="mono text-orange" style="font-size: 1.15rem; font-weight: 800;">${slot.qty} pcs</div>
+                </div>
+                <button class="btn btn-cyan btn-sm" onclick="openEditScrewModal('${slotId}')">Edit Fasteners</button>
+              </div>
+            </div>
+          `;
+        } else {
+          details.innerHTML = `
+            <div style="text-align: center; padding: 1rem 0;">
+              <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.75rem;">Chamber ${slotId} is currently unassigned.</p>
+              <button class="btn btn-primary btn-sm" onclick="openEditScrewModal('${slotId}')">+ Assign Screws to ${slotId}</button>
+            </div>
+          `;
+        }
+      }
+    }
+
+    function openEditScrewModal(slotId) {
+      const slot = screwSlots[slotId];
+      if (!slot) return;
+      document.getElementById('modalSlotLabel').textContent = slotId;
+      document.getElementById('slotFieldId').value = slotId;
+      document.getElementById('slotFieldPart').value = slot.part || '';
+      document.getElementById('slotFieldScrew').value = slot.screw || '';
+      document.getElementById('slotFieldQty').value = slot.qty || 4;
+      document.getElementById('slotFieldColor').value = slot.color || 'tag-cyan';
+      openModal('modalScrewSlot');
+    }
+
+    function handleSaveSlot(e) {
+      e.preventDefault();
+      const id = document.getElementById('slotFieldId').value;
+      if (!id || !screwSlots[id]) return;
+
+      screwSlots[id] = {
+        id,
+        part: document.getElementById('slotFieldPart').value.trim(),
+        screw: document.getElementById('slotFieldScrew').value.trim(),
+        qty: parseInt(document.getElementById('slotFieldQty').value, 10) || 0,
+        color: document.getElementById('slotFieldColor').value,
+        occupied: true
+      };
+
+      localStorage.setItem(STORAGE_KEYS.SCREWS, JSON.stringify(screwSlots));
+      renderScrewMat();
+      selectScrewSlot(id);
+      updateHudMetrics();
+      closeModal('modalScrewSlot');
+      showToast(`Chamber ${id} updated!`, 'border-cyan');
+    }
+
+    function handleClearCurrentSlot() {
+      if (!currentSelectedSlotId || !screwSlots[currentSelectedSlotId]) return;
+      screwSlots[currentSelectedSlotId] = {
+        id: currentSelectedSlotId,
+        part: '',
+        screw: '',
+        qty: 0,
+        color: 'tag-cyan',
+        occupied: false
+      };
+      localStorage.setItem(STORAGE_KEYS.SCREWS, JSON.stringify(screwSlots));
+      renderScrewMat();
+      selectScrewSlot(currentSelectedSlotId);
+      updateHudMetrics();
+      closeModal('modalScrewSlot');
+      showToast(`Chamber ${currentSelectedSlotId} cleared`, 'border-orange');
+    }
+
+    const btnClearAll = document.getElementById('btnClearAllTrays');
+    if (btnClearAll) {
+      btnClearAll.addEventListener('click', () => {
+        Object.keys(screwSlots).forEach(k => {
+          screwSlots[k].occupied = false;
+          screwSlots[k].part = '';
+          screwSlots[k].screw = '';
+          screwSlots[k].qty = 0;
+        });
+        localStorage.setItem(STORAGE_KEYS.SCREWS, JSON.stringify(screwSlots));
+        renderScrewMat();
+        if (currentSelectedSlotId) selectScrewSlot(currentSelectedSlotId);
+        updateHudMetrics();
+        showToast('All 16 chambers reset', 'border-orange');
+      });
+    }
+
+    /* =====================================================================
+       MODULE 3: MULTIMETER RAILS TABLE
+       ===================================================================== */
+    function renderRailsTable() {
+      const tbody = document.getElementById('railTableBody');
+      if (!tbody) return;
+
+      const q = (document.getElementById('railSearchInput')?.value || '').toLowerCase();
+      const cat = document.getElementById('railCategoryFilter')?.value || 'All';
+
+      const filtered = rails.filter(r => {
+        const matchesCat = cat === 'All' || r.category === cat;
+        const matchesQ = !q || r.name.toLowerCase().includes(q) || r.notes.toLowerCase().includes(q);
+        return matchesCat && matchesQ;
+      });
+
+      tbody.innerHTML = filtered.map(r => `
+        <tr>
+          <td class="mono font-bold" style="color: var(--accent-cyan);">${escapeHtml(r.name)}</td>
+          <td><span class="badge" style="background:#21262d; color: var(--text-dim);">${escapeHtml(r.category)}</span></td>
+          <td><span class="reading-box">${escapeHtml(r.diodeDrop)}</span></td>
+          <td class="mono">${escapeHtml(r.resistance)}</td>
+          <td><span class="inject-box">${escapeHtml(r.maxInjection)}</span></td>
+          <td style="color: #c9d1d9; font-size: 0.76rem;">${escapeHtml(r.notes)}</td>
+        </tr>
+      `).join('');
+    }
+
+    const railSearch = document.getElementById('railSearchInput');
+    const railCat = document.getElementById('railCategoryFilter');
+    if (railSearch) railSearch.addEventListener('input', renderRailsTable);
+    if (railCat) railCat.addEventListener('change', renderRailsTable);
+
+    const btnAddRail = document.getElementById('btnOpenAddRailModal');
+    if (btnAddRail) btnAddRail.addEventListener('click', () => openModal('modalAddRail'));
+
+    function handleSaveRail(e) {
+      e.preventDefault();
+      const newRail = {
+        name: document.getElementById('railFieldName').value.trim(),
+        category: document.getElementById('railFieldCat').value,
+        diodeDrop: document.getElementById('railFieldDiode').value.trim(),
+        resistance: document.getElementById('railFieldResist').value.trim(),
+        maxInjection: document.getElementById('railFieldInjection').value.trim(),
+        notes: document.getElementById('railFieldNotes').value.trim()
+      };
+      rails.unshift(newRail);
+      localStorage.setItem(STORAGE_KEYS.RAILS, JSON.stringify(rails));
+      renderRailsTable();
+      closeModal('modalAddRail');
+      showToast('Custom rail entry added!', 'border-cyan');
+    }
+
+    /* =====================================================================
+       MODULE 4: FLIP YIELD CALCULATOR
+       ===================================================================== */
+    function setupCalcModule() {
+      const inputs = ['calcAcquireCost', 'calcPartsCost', 'calcShippingFees', 'calcLaborHours', 'calcHourlyRate', 'calcTargetSell'];
+      inputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', calculateFlipYield);
+      });
+
+      const presetSel = document.getElementById('calcPresetSelector');
+      if (presetSel) {
+        presetSel.addEventListener('change', (e) => {
+          const val = e.target.value;
+          if (val === 'preset-gpu') setCalcValues(120, 35, 25, 2.5, 45, 380);
+          else if (val === 'preset-ps5') setCalcValues(90, 20, 20, 2.0, 45, 260);
+          else if (val === 'preset-thinkpad') setCalcValues(45, 15, 18, 1.5, 40, 180);
+          else if (val === 'preset-deck') setCalcValues(160, 55, 20, 1.0, 50, 340);
+        });
+      }
+
+      calculateFlipYield();
+    }
+
+    function setCalcValues(acq, parts, ship, hours, rate, sell) {
+      document.getElementById('calcAcquireCost').value = acq;
+      document.getElementById('calcPartsCost').value = parts;
+      document.getElementById('calcShippingFees').value = ship;
+      document.getElementById('calcLaborHours').value = hours;
+      document.getElementById('calcHourlyRate').value = rate;
+      document.getElementById('calcTargetSell').value = sell;
+      calculateFlipYield();
+    }
+
+    function calculateFlipYield() {
+      const acq = parseFloat(document.getElementById('calcAcquireCost')?.value) || 0;
+      const parts = parseFloat(document.getElementById('calcPartsCost')?.value) || 0;
+      const ship = parseFloat(document.getElementById('calcShippingFees')?.value) || 0;
+      const hours = parseFloat(document.getElementById('calcLaborHours')?.value) || 0;
+      const rate = parseFloat(document.getElementById('calcHourlyRate')?.value) || 0;
+      const sell = parseFloat(document.getElementById('calcTargetSell')?.value) || 0;
+
+      const laborCost = hours * rate;
+      const totalInvestment = acq + parts + ship + laborCost;
+      const netProfit = sell - totalInvestment;
+      const marginPct = sell > 0 ? ((netProfit / sell) * 100).toFixed(1) : '0.0';
+      const roiPct = totalInvestment > 0 ? ((netProfit / totalInvestment) * 100).toFixed(1) : '0.0';
+
+      const profitEl = document.getElementById('calcNetProfit');
+      const marginEl = document.getElementById('calcMarginPercent');
+      const breakevenEl = document.getElementById('calcBreakevenVal');
+      const laborEl = document.getElementById('calcLaborTotal');
+      const costSummary = document.getElementById('calcTotalCostSummary');
+      const roiSummary = document.getElementById('calcRoiSummary');
+
+      if (profitEl) {
+        profitEl.textContent = `$${netProfit.toFixed(2)}`;
+        profitEl.style.color = netProfit >= 0 ? 'var(--accent-orange-bright)' : 'var(--accent-crimson)';
+      }
+      if (marginEl) marginEl.textContent = `${marginPct}%`;
+      if (breakevenEl) breakevenEl.textContent = `$${totalInvestment.toFixed(2)}`;
+      if (laborEl) laborEl.textContent = `$${laborCost.toFixed(2)}`;
+      if (costSummary) costSummary.textContent = `Total Investment: $${totalInvestment.toFixed(2)}`;
+      if (roiSummary) roiSummary.textContent = `ROI: ${roiPct >= 0 ? '+' : ''}${roiPct}%`;
+
+      // Render Dynamic Target Margins Table
+      const targetTableBody = document.getElementById('targetMarginsTableBody');
+      if (targetTableBody) {
+        const margins = [15, 20, 25, 30, 40];
+        targetTableBody.innerHTML = margins.map(m => {
+          const reqSell = totalInvestment / (1 - (m / 100));
+          const reqProfit = reqSell - totalInvestment;
+          return `
+            <tr>
+              <td class="mono font-bold" style="color: var(--accent-cyan);">${m}% Margin</td>
+              <td class="mono">$${reqSell.toFixed(2)}</td>
+              <td class="mono text-emerald">+$${reqProfit.toFixed(2)}</td>
+              <td style="font-size: 0.72rem; color: var(--text-dim);">${reqSell <= sell ? 'Achieved at target price' : 'Requires price bump'}</td>
+            </tr>
+          `;
+        }).join('');
+      }
+    }
+
+    /* =====================================================================
+       CLOUD REAL-TIME CROSS-DEVICE SYNC
+       ===================================================================== */
+    let cloudSyncInterval = null;
+
+    function setupCloudSync() {
+      const btnOpen = document.getElementById('btnOpenCloudSync');
+      const btnSave = document.getElementById('btnSaveCloudKey');
+      const btnDisconnect = document.getElementById('btnDisconnectCloud');
+      const btnPush = document.getElementById('btnPushCloudManual');
+      const btnPull = document.getElementById('btnPullCloudManual');
+      const btnGen = document.getElementById('btnGenerateSyncKey');
+      const input = document.getElementById('cloudSyncKeyInput');
+
+      const savedKey = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY) || '';
+      if (input) input.value = savedKey;
+      updateCloudSyncUI(savedKey);
+
+      if (btnOpen) btnOpen.addEventListener('click', () => openModal('modalCloudSync'));
+      if (btnGen) {
+        btnGen.addEventListener('click', () => {
+          if (input) input.value = 'bench-' + Math.random().toString(36).substring(2, 9);
+        });
+      }
+      if (btnSave) {
+        btnSave.addEventListener('click', () => {
+          const key = (input.value || '').trim();
+          if (!key) {
+            showToast('Please enter a Sync Key', 'border-crimson');
+            return;
+          }
+          localStorage.setItem(STORAGE_KEYS.CLOUD_KEY, key);
+          updateCloudSyncUI(key);
+          pullCloudData();
+          closeModal('modalCloudSync');
+        });
+      }
+      if (btnDisconnect) {
+        btnDisconnect.addEventListener('click', () => {
+          localStorage.removeItem(STORAGE_KEYS.CLOUD_KEY);
+          if (input) input.value = '';
+          updateCloudSyncUI('');
+          showToast('Disconnected from cloud sync', 'border-orange');
+        });
+      }
+      if (btnPush) btnPush.addEventListener('click', pushCloudDataManual);
+      if (btnPull) btnPull.addEventListener('click', pullCloudDataManual);
+
+      if (savedKey) {
+        pullCloudData();
+        if (cloudSyncInterval) clearInterval(cloudSyncInterval);
+        cloudSyncInterval = setInterval(pullCloudData, 45000); // Polling every 45s
+      }
+    }
+
+    function updateCloudSyncUI(key) {
+      const dot = document.getElementById('cloudSyncDot');
+      const statusText = document.getElementById('cloudSyncStatusText');
+      if (key) {
+        if (dot) dot.style.background = '#10b981';
+        if (statusText) {
+          statusText.textContent = `Connected (${key})`;
+          statusText.style.color = 'var(--accent-emerald)';
+        }
+      } else {
+        if (dot) dot.style.background = '#6e7681';
+        if (statusText) {
+          statusText.textContent = 'Disconnected';
+          statusText.style.color = 'var(--text-dim)';
+        }
+      }
+    }
+
+    async function pushCloudDataSilent() {
+      const key = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
+      if (!key) return;
+      try {
+        await fetch(CLOUD_API_BASE + encodeURIComponent(key), {
+          method: 'POST',
+          body: JSON.stringify(jobs),
+          headers: { 'Content-Type': 'application/json' }
+        });
+        localStorage.setItem(STORAGE_KEYS.CLOUD_LAST_SYNC, new Date().toLocaleTimeString());
+      } catch (e) {
+        console.warn('Silent cloud push failed:', e);
+      }
+    }
+
+    async function pushCloudDataManual() {
+      const key = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
+      if (!key) {
+        showToast('Set a Sync Key first', 'border-crimson');
+        return;
+      }
+      try {
+        const res = await fetch(CLOUD_API_BASE + encodeURIComponent(key), {
+          method: 'POST',
+          body: JSON.stringify(jobs),
+          headers: { 'Content-Type': 'application/json' }
+        });
+        if (res.ok) {
+          showToast('Cloud updated successfully!', 'border-emerald');
+          const time = new Date().toLocaleTimeString();
+          localStorage.setItem(STORAGE_KEYS.CLOUD_LAST_SYNC, time);
+          const lastTimeEl = document.getElementById('cloudSyncLastTime');
+          if (lastTimeEl) lastTimeEl.textContent = time;
+        }
+      } catch (err) {
+        showToast('Network error updating cloud', 'border-crimson');
+      }
+    }
+
+    async function pullCloudData() {
+      const key = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
+      if (!key) return;
+      try {
+        const res = await fetch(CLOUD_API_BASE + encodeURIComponent(key));
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            jobs = data;
+            localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs));
+            renderJobs();
+            updateHudMetrics();
+          }
+        }
+      } catch (e) {
+        console.warn('Cloud pull failed:', e);
+      }
+    }
+
+    async function pullCloudDataManual() {
+      const key = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
+      if (!key) {
+        showToast('Set a Sync Key first', 'border-crimson');
+        return;
+      }
+      try {
+        const res = await fetch(CLOUD_API_BASE + encodeURIComponent(key));
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            jobs = data;
+            localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs));
+            renderJobs();
+            updateHudMetrics();
+            showToast('Synced jobs from cloud!', 'border-emerald');
+          }
+        } else {
+          showToast('No cloud data found for this key yet', 'border-orange');
+        }
+      } catch (e) {
+        showToast('Network error pulling from cloud', 'border-crimson');
+      }
+    }
+
+    /* =====================================================================
+       MODAL UTILITY & TOAST NOTIFICATION HELPERS
+       ===================================================================== */
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('active');
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('active');
+    }
+
+    // Close on backdrop click
+    document.querySelectorAll('.modal-backdrop').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('active');
+        }
+      });
+    });
+
+    function setupVerificationModal() {
+      const btnBadge = document.getElementById('btnVerifyBadge');
+      if (btnBadge) {
+        btnBadge.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openModal('modalVerifyBadge');
+          triggerLogoAction();
+        });
+      }
+    }
+
+    function showToast(message, borderClass = 'border-orange') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast-msg ${borderClass}`;
+      toast.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>${escapeHtml(message)}</span>
+      `;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.transition = 'opacity 0.3s, transform 0.3s';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(20px)';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Bootstrap workbench hub upon DOM load
+    window.addEventListener('DOMContentLoaded', () => {
+      initApp();
+      setupPwaCapabilities();
+      runBootScreenSequence();
+
+      // Live updating date and time for header
+      function updateLiveHeaderClock() {
+        const timeEl = document.getElementById('headerLiveDateTime');
+        if (!timeEl) return;
+        const now = new Date();
+
+        // Display full weekday, month, day, year, and complete time with seconds
+        const datePart = now.toLocaleDateString(undefined, {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric'
+        });
+
+        const timePart = now.toLocaleTimeString(undefined, {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+
+        timeEl.textContent = `${datePart} • ${timePart}`;
+      }
+      updateLiveHeaderClock();
+      setInterval(updateLiveHeaderClock, 1000);
+    });
+
+    /* =====================================================================
+       PROGRESSIVE WEB APP (PWA) ENGINE: WHL INSTALLATION & MANIFEST
+       ===================================================================== */
+    let deferredPrompt = null;
+
+    function setupPwaCapabilities() {
+      // 1. Generate Crisp Silicon Multi-tool SVG Icon Data URL
+      const appIconSvg = `
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+          <defs>
+            <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#ff8c1a"/>
+              <stop offset="55%" stop-color="#e65100"/>
+              <stop offset="100%" stop-color="#b71c1c"/>
+            </linearGradient>
+            <linearGradient id="chipGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#161b22"/>
+              <stop offset="100%" stop-color="#0b0f14"/>
+            </linearGradient>
+          </defs>
+          <rect width="512" height="512" rx="115" fill="url(#bgGrad)"/>
+          <rect x="24" y="24" width="464" height="464" rx="95" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="6"/>
+          
+          <!-- Outer Chip Body -->
+          <rect x="110" y="110" width="292" height="292" rx="42" fill="url(#chipGrad)" stroke="#30363d" stroke-width="12"/>
+          <rect x="186" y="186" width="140" height="140" rx="16" fill="#21262d" stroke="#ff7b00" stroke-width="8"/>
+          
+          <!-- Silicon Traces & Bus Pins -->
+          <path d="M186 28v74M326 28v74M186 410v74M326 410v74M28 186h74M28 326h74M410 186h74M410 326h74" stroke="#ffffff" stroke-width="26" stroke-linecap="round"/>
+          
+          <!-- Center Sensor Dot -->
+          <circle cx="256" cy="256" r="28" fill="#ff7b00"/>
+          <circle cx="256" cy="256" r="14" fill="#38bdf8"/>
+          
+          <!-- App Initials Accent "WHL" -->
+          <text x="256" y="380" font-family="system-ui, -apple-system, sans-serif" font-size="34" font-weight="900" fill="#38bdf8" text-anchor="middle" letter-spacing="4">WHL</text>
+        </svg>
+      `.trim();
+
+      const iconDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(appIconSvg);
+
+      // Attach icon to dynamic link elements & drawer preview image
+      const favicon = document.getElementById('dynamicFavicon');
+      const appleIcon = document.getElementById('dynamicAppleIcon');
+      const drawerIcon = document.getElementById('pwaDrawerAppIcon');
+
+      if (favicon) favicon.href = iconDataUrl;
+      if (appleIcon) appleIcon.href = iconDataUrl;
+      if (drawerIcon) drawerIcon.src = iconDataUrl;
+
+      // 2. Generate and attach Web App Manifest with app name "WHL"
+      const manifestObj = {
+        name: "WHL - Workbench & Hardware Lab",
+        short_name: "WHL",
+        description: "Professional bench companion for electronics diagnostics, micro-soldering, and hardware repair.",
+        start_url: window.location.href,
+        display: "standalone",
+        orientation: "any",
+        background_color: "#090d13",
+        theme_color: "#090d13",
+        icons: [
+          {
+            src: iconDataUrl,
+            sizes: "512x512",
+            type: "image/svg+xml",
+            purpose: "any maskable"
+          }
+        ]
+      };
+
+      const manifestBlob = new Blob([JSON.stringify(manifestObj, null, 2)], { type: 'application/manifest+json' });
+      const manifestUrl = URL.createObjectURL(manifestBlob);
+      const manifestTag = document.getElementById('dynamicManifest');
+      if (manifestTag) manifestTag.setAttribute('href', manifestUrl);
+
+      // 3. Register In-Memory Offline Fallback Service Worker
+      if ('serviceWorker' in navigator) {
+        const swScript = `
+          const CACHE_NAME = 'whl-cache-v1';
+          self.addEventListener('install', (e) => {
+            self.skipWaiting();
+          });
+          self.addEventListener('activate', (e) => {
+            e.waitUntil(clients.claim());
+          });
+          self.addEventListener('fetch', (e) => {
+            e.respondWith(
+              fetch(e.request).catch(() => caches.match(e.request))
+            );
+          });
+        `;
+        const swBlob = new Blob([swScript], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(swBlob);
+        navigator.serviceWorker.register(swUrl).catch((err) => {
+          console.warn('Service worker registration error:', err);
+        });
+      }
+
+      // 4. Capture 'beforeinstallprompt' & Bind Install Button
+      const installBtn = document.getElementById('btnInstallPwa');
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        if (installBtn) {
+          installBtn.classList.remove('btn-cyan');
+          installBtn.classList.add('btn-primary');
+          installBtn.innerHTML = `
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Install WHL App</span>
+          `;
+        }
+      });
+
+      if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+              showToast('WHL app installed successfully!', 'border-emerald');
+            }
+            deferredPrompt = null;
+          } else {
+            // Informative fallback for iOS / Safari or browsers without beforeinstallprompt
+            const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+            if (isIos) {
+              showToast('iOS: Tap Share (⎋) then "Add to Home Screen" to install WHL', 'border-cyan');
+            } else {
+              showToast('Tap browser menu (⋮) and select "Install app" or "Add to Home screen"', 'border-cyan');
+            }
+          }
+        });
+      }
+
+      window.addEventListener('appinstalled', () => {
+        deferredPrompt = null;
+        if (installBtn) {
+          installBtn.innerHTML = `
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>WHL Installed</span>
+          `;
+          installBtn.disabled = true;
+        }
+        showToast('WHL is installed and ready on your home screen!', 'border-emerald');
+      });
+    }
+
+    /* Cinematic Boot Sequence & Flight Animation (With Bulletproof Safety Fallback) */
+    function runBootScreenSequence() {
+      const overlay = document.getElementById('bootScreenOverlay');
+      const bootChip = document.getElementById('bootChipLogo');
+      const bar = document.getElementById('bootProgressBar');
+      const statusMsg = document.getElementById('bootStatusMessage');
+      const targetHeaderLogo = document.getElementById('headerBrandLogo');
+      const bootSvg = document.getElementById('bootChipSvg');
+      const ring = document.getElementById('bootGlowRing');
+      const meta = document.getElementById('bootMetaInfo');
+
+      // Dismiss helper function
+      const dismissBoot = () => {
+        if (overlay && overlay.parentNode) overlay.remove();
+        if (bootChip && bootChip.parentNode) bootChip.remove();
+        triggerLogoAction();
+      };
+
+      // Failsafe auto-dismiss after 1.8 seconds max
+      const safetyTimeout = setTimeout(dismissBoot, 1800);
+
+      if (!overlay || !bootChip || !targetHeaderLogo) {
+        clearTimeout(safetyTimeout);
+        dismissBoot();
+        return;
+      }
+
+      const msgs = currentFestival ? currentFestival.bootMessages : ['POLLING RAILS...', 'CALIBRATING...', 'READY'];
+
+      if (isFestiveActive && currentFestival) {
+        bootChip.style.background = currentFestival.gradient;
+        if (statusMsg) statusMsg.textContent = msgs[0];
+      }
+
+      setTimeout(() => {
+        if (bar) bar.style.width = '45%';
+        if (statusMsg) statusMsg.textContent = isFestiveActive ? msgs[1] : 'POLLING BUS RAILS & TRAY DB...';
+      }, 200);
+
+      setTimeout(() => {
+        if (bar) bar.style.width = '85%';
+        if (statusMsg) statusMsg.textContent = isFestiveActive ? msgs[2] : 'CALIBRATING GAUGES & PINOUTS...';
+      }, 500);
+
+      setTimeout(() => {
+        if (bar) bar.style.width = '100%';
+        if (statusMsg) statusMsg.textContent = isFestiveActive ? msgs[3] : 'INITIALIZATION COMPLETE';
+      }, 800);
+
+      // Stage 2: Flight to top-left header
+      setTimeout(() => {
+        if (meta) meta.style.opacity = '0';
+        if (ring) ring.style.opacity = '0';
+
+        const chipRect = bootChip.getBoundingClientRect();
+        const targetRect = targetHeaderLogo.getBoundingClientRect();
+
+        bootChip.classList.add('boot-logo-flying');
+        bootChip.style.top = `${chipRect.top}px`;
+        bootChip.style.left = `${chipRect.left}px`;
+        bootChip.style.width = `${chipRect.width}px`;
+        bootChip.style.height = `${chipRect.height}px`;
+        bootChip.style.animation = 'none';
+
+        void bootChip.offsetWidth;
+
+        bootChip.style.top = `${targetRect.top}px`;
+        bootChip.style.left = `${targetRect.left}px`;
+        bootChip.style.width = `${targetRect.width}px`;
+        bootChip.style.height = `${targetRect.height}px`;
+        bootChip.style.borderRadius = '10px';
+        bootChip.style.boxShadow = '0 0 12px var(--accent-orange-glow)';
+        bootChip.style.transform = 'rotate(360deg)';
+
+        if (bootSvg) {
+          bootSvg.style.width = '24px';
+          bootSvg.style.height = '24px';
+          bootSvg.style.transition = 'all 0.55s cubic-bezier(0.25, 1, 0.5, 1)';
+        }
+
+        overlay.classList.add('boot-fade-out');
+
+        setTimeout(() => {
+          clearTimeout(safetyTimeout);
+          dismissBoot();
+
+          document.querySelectorAll('.bench-controls-bar, .dock-container').forEach(el => {
+            el.classList.add('fluid-fade-in');
+          });
+        }, 550);
+      }, 950);
+    }
+  </script>
+</body>
+</html>
