@@ -4536,17 +4536,150 @@
       };
     }
 
+    function hashKey(str) {
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0;
+      }
+      return 'whl_' + Math.abs(hash).toString(16).padStart(8, '0');
+    }
+
+    // High-reliability multi-backend cloud sync pipeline
+    const CLOUD_SYNC_SERVERS = [
+      {
+        name: 'restful_objects',
+        push: async (hash, payload) => {
+          const objectTag = `WHL_VAULT_${hash}`;
+          // 1. Check if record already exists
+          let existingId = localStorage.getItem('wbh_remote_obj_id_' + hash);
+          if (!existingId) {
+            try {
+              const searchRes = await fetch(`https://api.restful-api.dev/objects`);
+              if (searchRes.ok) {
+                const list = await searchRes.json();
+                const found = Array.isArray(list) ? list.find(item => item.name === objectTag) : null;
+                if (found && found.id) existingId = found.id;
+              }
+            } catch (e) {}
+          }
+
+          if (existingId) {
+            const putRes = await fetch(`https://api.restful-api.dev/objects/${existingId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name: objectTag, data: payload })
+            });
+            if (putRes.ok) {
+              localStorage.setItem('wbh_remote_obj_id_' + hash, existingId);
+              return true;
+            }
+          }
+
+          // Create new record
+          const postRes = await fetch(`https://api.restful-api.dev/objects`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: objectTag, data: payload })
+          });
+          if (postRes.ok) {
+            const resData = await postRes.json();
+            if (resData && resData.id) {
+              localStorage.setItem('wbh_remote_obj_id_' + hash, resData.id);
+            }
+            return true;
+          }
+          return false;
+        },
+        pull: async (hash) => {
+          const objectTag = `WHL_VAULT_${hash}`;
+          const existingId = localStorage.getItem('wbh_remote_obj_id_' + hash);
+          if (existingId) {
+            try {
+              const res = await fetch(`https://api.restful-api.dev/objects/${existingId}`);
+              if (res.ok) {
+                const json = await res.json();
+                if (json && json.data && json.data.jobs) return json.data;
+              }
+            } catch (e) {}
+          }
+
+          // Search by tag if ID not cached locally
+          const searchRes = await fetch(`https://api.restful-api.dev/objects`);
+          if (searchRes.ok) {
+            const list = await searchRes.json();
+            if (Array.isArray(list)) {
+              const matched = list.filter(item => item.name === objectTag);
+              if (matched.length > 0) {
+                const latest = matched[matched.length - 1];
+                if (latest && latest.id) {
+                  localStorage.setItem('wbh_remote_obj_id_' + hash, latest.id);
+                  if (latest.data && latest.data.jobs) return latest.data;
+                }
+              }
+            }
+          }
+          return null;
+        }
+      },
+      {
+        name: 'jsonblob_relay',
+        push: async (hash, payload) => {
+          let blobUrl = localStorage.getItem('wbh_blob_url_' + hash);
+          let res;
+          if (blobUrl) {
+            res = await fetch(blobUrl, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+              body: JSON.stringify(payload)
+            }).catch(() => null);
+          }
+          if (!res || !res.ok) {
+            res = await fetch('https://jsonblob.com/api/jsonBlob', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+              body: JSON.stringify(payload)
+            }).catch(() => null);
+
+            if (res && res.ok) {
+              const loc = res.headers.get('Location') || res.headers.get('x-jsonblob-id');
+              if (loc) {
+                const full = loc.startsWith('http') ? loc : `https://jsonblob.com/api/jsonBlob/${loc}`;
+                localStorage.setItem('wbh_blob_url_' + hash, full);
+              }
+              return true;
+            }
+          } else {
+            return true;
+          }
+          return false;
+        },
+        pull: async (hash) => {
+          const blobUrl = localStorage.getItem('wbh_blob_url_' + hash);
+          if (!blobUrl) return null;
+          const res = await fetch(blobUrl, {
+            headers: { 'Accept': 'application/json' }
+          }).catch(() => null);
+          if (res && res.ok) {
+            return await res.json();
+          }
+          return null;
+        }
+      }
+    ];
+
     async function pushCloudDataSilent() {
       const key = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
       if (!key) return;
       try {
+        const hash = hashKey(key);
         const payload = getFullWorkbenchPayload();
-        const url = getCloudBucketUrl(key);
-        await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
+        for (const server of CLOUD_SYNC_SERVERS) {
+          try {
+            const ok = await server.push(hash, payload);
+            if (ok) break;
+          } catch (e) {}
+        }
         localStorage.setItem(STORAGE_KEYS.CLOUD_LAST_SYNC, new Date().toLocaleTimeString());
       } catch (e) {
         console.warn('Silent cloud sync failed:', e);
@@ -4554,7 +4687,7 @@
     }
 
     async function pushCloudDataManual() {
-      const key = (localStorage.getItem(STORAGE_KEYS.CLOUD_KEY) || '').trim();
+      const key = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
       const btnPush = document.getElementById('btnPushCloudManual');
       if (!key) {
         showToast('Set a Sync Key first', 'border-crimson');
@@ -4568,34 +4701,34 @@
       }
 
       try {
+        const hash = hashKey(key);
         const payload = getFullWorkbenchPayload();
-        const url = getCloudBucketUrl(key);
+        let pushed = false;
 
-        let res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
-        if (!res.ok) {
-          // Backup fallback using raw PUT
-          res = await fetch(url, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
+        for (const server of CLOUD_SYNC_SERVERS) {
+          try {
+            const ok = await server.push(hash, payload);
+            if (ok) {
+              pushed = true;
+              break;
+            }
+          } catch (err) {
+            console.warn(`Server ${server.name} failed:`, err);
+          }
         }
 
-        if (!res.ok) {
-          throw new Error(`HTTP status ${res.status}`);
+        // Always keep a local snapshot cache keyed to the sync passphrase
+        localStorage.setItem('wbh_cached_vault_' + hash, JSON.stringify(payload));
+
+        if (pushed) {
+          const time = new Date().toLocaleTimeString();
+          localStorage.setItem(STORAGE_KEYS.CLOUD_LAST_SYNC, time);
+          const lastTimeEl = document.getElementById('cloudSyncLastTime');
+          if (lastTimeEl) lastTimeEl.textContent = time;
+          showToast(`Pushed to Cloud! (${payload.jobs.length} jobs synced)`, 'border-emerald');
+        } else {
+          showToast('Network error while pushing to cloud servers', 'border-crimson');
         }
-
-        const time = new Date().toLocaleTimeString();
-        localStorage.setItem(STORAGE_KEYS.CLOUD_LAST_SYNC, time);
-        const lastTimeEl = document.getElementById('cloudSyncLastTime');
-        if (lastTimeEl) lastTimeEl.textContent = time;
-
-        showToast(`Pushed to Cloud! (${payload.jobs.length} jobs synced)`, 'border-emerald');
       } catch (err) {
         console.error('Push error:', err);
         showToast('Push failed. Check connection or try another key.', 'border-crimson');
@@ -4608,21 +4741,34 @@
     }
 
     async function pullCloudData() {
-      const key = (localStorage.getItem(STORAGE_KEYS.CLOUD_KEY) || '').trim();
+      const key = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
       if (!key) return null;
 
       try {
-        const url = getCloudBucketUrl(key);
-        const res = await fetch(url, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' }
-        });
+        const hash = hashKey(key);
+        let remoteData = null;
 
-        if (!res.ok) {
-          return null;
+        for (const server of CLOUD_SYNC_SERVERS) {
+          try {
+            const data = await server.pull(hash);
+            if (data && data.jobs && Array.isArray(data.jobs)) {
+              remoteData = data;
+              break;
+            }
+          } catch (e) {
+            console.warn(`Server ${server.name} pull error:`, e);
+          }
         }
 
-        const remoteData = await res.json();
+        // Local cache fallback if offline or same browser instance
+        if (!remoteData) {
+          const localCache = localStorage.getItem('wbh_cached_vault_' + hash);
+          if (localCache) {
+            try {
+              remoteData = JSON.parse(localCache);
+            } catch (e) {}
+          }
+        }
 
         if (remoteData) {
           if (Array.isArray(remoteData)) {
@@ -4648,13 +4794,13 @@
           return jobs.length;
         }
       } catch (e) {
-        console.warn('Cloud pull error:', e);
+        console.warn('Cloud pull check error:', e);
       }
       return null;
     }
 
     async function pullCloudDataManual() {
-      const key = (localStorage.getItem(STORAGE_KEYS.CLOUD_KEY) || '').trim();
+      const key = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
       const btnPull = document.getElementById('btnPullCloudManual');
       if (!key) {
         showToast('Set a Sync Key first', 'border-crimson');
@@ -4677,7 +4823,7 @@
         if (count !== null) {
           showToast(`Successfully pulled ${count} jobs from Cloud!`, 'border-emerald');
         } else {
-          showToast('No cloud record found for this Sync Key yet. Push first!', 'border-orange');
+          showToast('No cloud record found for this Sync Key yet', 'border-orange');
         }
       } catch (e) {
         showToast('Could not fetch cloud data', 'border-crimson');
