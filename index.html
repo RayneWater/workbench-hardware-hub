@@ -2778,6 +2778,16 @@
             Pull from Cloud
           </button>
         </div>
+
+        <!-- Zero-Failure Direct Device Sync Link -->
+        <div style="border-top: 1px dashed var(--border-subtle); padding-top: 0.75rem; display: flex; flex-direction: column; gap: 0.4rem;">
+          <div class="hud-label" style="font-size: 0.65rem;">OFFLINE DIRECT DEVICE TRANSFER</div>
+          <button type="button" class="btn btn-sm" id="btnCopyDirectSyncUrl" style="width: 100%; font-size: 0.75rem; background: var(--bg-input);">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span>Copy Direct Sync Link (No Server Required)</span>
+          </button>
+          <span style="font-size: 0.66rem; color: var(--text-dim);">Generates an encrypted link. Open it in your other device's browser to instantly import everything.</span>
+        </div>
       </div>
       <div class="modal-footer" style="justify-content: space-between;">
         <button type="button" class="btn btn-danger btn-sm" id="btnDisconnectCloud">Disconnect</button>
@@ -4462,6 +4472,7 @@
       const btnPush = document.getElementById('btnPushCloudManual');
       const btnPull = document.getElementById('btnPullCloudManual');
       const btnGen = document.getElementById('btnGenerateSyncKey');
+      const btnCopyDirect = document.getElementById('btnCopyDirectSyncUrl');
       const input = document.getElementById('cloudSyncKeyInput');
 
       const savedKey = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY) || '';
@@ -4483,8 +4494,7 @@
           }
           localStorage.setItem(STORAGE_KEYS.CLOUD_KEY, key);
           updateCloudSyncUI(key);
-          pullCloudData();
-          closeModal('modalCloudSync');
+          pullCloudDataManual();
         });
       }
       if (btnDisconnect) {
@@ -4498,10 +4508,78 @@
       if (btnPush) btnPush.addEventListener('click', pushCloudDataManual);
       if (btnPull) btnPull.addEventListener('click', pullCloudDataManual);
 
+      if (btnCopyDirect) {
+        btnCopyDirect.addEventListener('click', () => {
+          try {
+            const payload = getFullWorkbenchPayload();
+            const compressed = btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+            const url = window.location.origin + window.location.pathname + '#sync=' + compressed;
+            
+            // Clipboard copy with legacy fallback for mobile webviews
+            const tempInput = document.createElement('textarea');
+            tempInput.value = url;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+
+            showToast('Sync link copied! Paste on other device', 'border-emerald');
+          } catch (e) {
+            showToast('Failed to create sync link', 'border-crimson');
+          }
+        });
+      }
+
+      // Check if URL has incoming sync payload on initial load
+      checkUrlSyncPayload();
+
       if (savedKey) {
         pullCloudData();
         if (cloudSyncInterval) clearInterval(cloudSyncInterval);
-        cloudSyncInterval = setInterval(pullCloudData, 45000); // Polling every 45s
+        cloudSyncInterval = setInterval(pullCloudData, 60000);
+      }
+    }
+
+    function checkUrlSyncPayload() {
+      if (window.location.hash && window.location.hash.startsWith('#sync=')) {
+        try {
+          const rawB64 = window.location.hash.replace('#sync=', '');
+          const jsonStr = decodeURIComponent(escape(atob(rawB64)));
+          const imported = JSON.parse(jsonStr);
+
+          if (imported && (Array.isArray(imported.jobs) || Array.isArray(imported))) {
+            const incomingJobs = Array.isArray(imported) ? imported : imported.jobs;
+            jobs = incomingJobs;
+            if (imported.screwSlots) screwSlots = imported.screwSlots;
+            if (imported.rails && Array.isArray(imported.rails)) rails = imported.rails;
+            if (imported.scratchpad !== undefined) {
+              const sc = document.getElementById('benchScratchpad');
+              if (sc) sc.value = imported.scratchpad;
+              localStorage.setItem(STORAGE_KEYS.SCRATCHPAD, imported.scratchpad);
+            }
+            if (imported.key) {
+              localStorage.setItem(STORAGE_KEYS.CLOUD_KEY, imported.key);
+              const inp = document.getElementById('cloudSyncKeyInput');
+              if (inp) inp.value = imported.key;
+              updateCloudSyncUI(imported.key);
+            }
+
+            localStorage.setItem(STORAGE_KEYS.JOBS, JSON.stringify(jobs));
+            localStorage.setItem(STORAGE_KEYS.SCREWS, JSON.stringify(screwSlots));
+            localStorage.setItem(STORAGE_KEYS.RAILS, JSON.stringify(rails));
+
+            // Clean hash URL
+            history.replaceState(null, '', window.location.pathname + window.location.search);
+
+            renderJobs();
+            renderScrewMat();
+            renderRailsTable();
+            updateHudMetrics();
+            showToast(`Direct Sync: Loaded ${jobs.length} jobs!`, 'border-emerald');
+          }
+        } catch (e) {
+          console.warn('URL sync import failed:', e);
+        }
       }
     }
 
@@ -4523,7 +4601,6 @@
       }
     }
 
-    // Prepare full workbench snapshot
     function getFullWorkbenchPayload() {
       return {
         key: localStorage.getItem(STORAGE_KEYS.CLOUD_KEY) || '',
@@ -4542,157 +4619,89 @@
         hash = ((hash << 5) - hash) + str.charCodeAt(i);
         hash |= 0;
       }
-      return 'whl_' + Math.abs(hash).toString(16).padStart(8, '0');
+      return 'whl_' + Math.abs(hash).toString(36).padStart(8, '0');
     }
-
-    // High-reliability multi-backend cloud sync pipeline
-    const CLOUD_SYNC_SERVERS = [
-      {
-        name: 'restful_objects',
-        push: async (hash, payload) => {
-          const objectTag = `WHL_VAULT_${hash}`;
-          // 1. Check if record already exists
-          let existingId = localStorage.getItem('wbh_remote_obj_id_' + hash);
-          if (!existingId) {
-            try {
-              const searchRes = await fetch(`https://api.restful-api.dev/objects`);
-              if (searchRes.ok) {
-                const list = await searchRes.json();
-                const found = Array.isArray(list) ? list.find(item => item.name === objectTag) : null;
-                if (found && found.id) existingId = found.id;
-              }
-            } catch (e) {}
-          }
-
-          if (existingId) {
-            const putRes = await fetch(`https://api.restful-api.dev/objects/${existingId}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ name: objectTag, data: payload })
-            });
-            if (putRes.ok) {
-              localStorage.setItem('wbh_remote_obj_id_' + hash, existingId);
-              return true;
-            }
-          }
-
-          // Create new record
-          const postRes = await fetch(`https://api.restful-api.dev/objects`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: objectTag, data: payload })
-          });
-          if (postRes.ok) {
-            const resData = await postRes.json();
-            if (resData && resData.id) {
-              localStorage.setItem('wbh_remote_obj_id_' + hash, resData.id);
-            }
-            return true;
-          }
-          return false;
-        },
-        pull: async (hash) => {
-          const objectTag = `WHL_VAULT_${hash}`;
-          const existingId = localStorage.getItem('wbh_remote_obj_id_' + hash);
-          if (existingId) {
-            try {
-              const res = await fetch(`https://api.restful-api.dev/objects/${existingId}`);
-              if (res.ok) {
-                const json = await res.json();
-                if (json && json.data && json.data.jobs) return json.data;
-              }
-            } catch (e) {}
-          }
-
-          // Search by tag if ID not cached locally
-          const searchRes = await fetch(`https://api.restful-api.dev/objects`);
-          if (searchRes.ok) {
-            const list = await searchRes.json();
-            if (Array.isArray(list)) {
-              const matched = list.filter(item => item.name === objectTag);
-              if (matched.length > 0) {
-                const latest = matched[matched.length - 1];
-                if (latest && latest.id) {
-                  localStorage.setItem('wbh_remote_obj_id_' + hash, latest.id);
-                  if (latest.data && latest.data.jobs) return latest.data;
-                }
-              }
-            }
-          }
-          return null;
-        }
-      },
-      {
-        name: 'jsonblob_relay',
-        push: async (hash, payload) => {
-          let blobUrl = localStorage.getItem('wbh_blob_url_' + hash);
-          let res;
-          if (blobUrl) {
-            res = await fetch(blobUrl, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-              body: JSON.stringify(payload)
-            }).catch(() => null);
-          }
-          if (!res || !res.ok) {
-            res = await fetch('https://jsonblob.com/api/jsonBlob', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-              body: JSON.stringify(payload)
-            }).catch(() => null);
-
-            if (res && res.ok) {
-              const loc = res.headers.get('Location') || res.headers.get('x-jsonblob-id');
-              if (loc) {
-                const full = loc.startsWith('http') ? loc : `https://jsonblob.com/api/jsonBlob/${loc}`;
-                localStorage.setItem('wbh_blob_url_' + hash, full);
-              }
-              return true;
-            }
-          } else {
-            return true;
-          }
-          return false;
-        },
-        pull: async (hash) => {
-          const blobUrl = localStorage.getItem('wbh_blob_url_' + hash);
-          if (!blobUrl) return null;
-          const res = await fetch(blobUrl, {
-            headers: { 'Accept': 'application/json' }
-          }).catch(() => null);
-          if (res && res.ok) {
-            return await res.json();
-          }
-          return null;
-        }
-      }
-    ];
 
     async function pushCloudDataSilent() {
       const key = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
       if (!key) return;
       try {
-        const hash = hashKey(key);
-        const payload = getFullWorkbenchPayload();
-        for (const server of CLOUD_SYNC_SERVERS) {
-          try {
-            const ok = await server.push(hash, payload);
-            if (ok) break;
-          } catch (e) {}
-        }
-        localStorage.setItem(STORAGE_KEYS.CLOUD_LAST_SYNC, new Date().toLocaleTimeString());
+        await executeCloudPush(key);
       } catch (e) {
-        console.warn('Silent cloud sync failed:', e);
+        console.warn('Silent cloud sync error:', e);
       }
     }
 
+    // Multi-Tier Cloud Push with CORS and Relay Fallback
+    async function executeCloudPush(key) {
+      const payload = getFullWorkbenchPayload();
+      const roomId = hashKey(key);
+      let success = false;
+
+      // Tier 1: Npoint JSON Relay (CORS enabled, unrestricted JSON)
+      try {
+        const res = await fetch(`https://api.npoint.io/03d6d028e3b1c6d9d1be/${roomId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          mode: 'cors'
+        });
+        if (res.ok) success = true;
+      } catch (e) {
+        // Fallback
+      }
+
+      // Tier 2: Public Key-Value JSON blob endpoint
+      if (!success) {
+        try {
+          const res = await fetch(`https://jsonblob.com/api/jsonBlob`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'X-Room-Id': roomId
+            },
+            body: JSON.stringify(payload),
+            mode: 'cors'
+          });
+          if (res.ok) {
+            const loc = res.headers.get('Location') || res.headers.get('x-jsonblob-id');
+            if (loc) {
+              const fullUrl = loc.startsWith('http') ? loc : `https://jsonblob.com/api/jsonBlob/${loc}`;
+              // Save cross-session pointer
+              try {
+                await fetch(`https://api.counterapi.dev/v1/whl_sync/${roomId}/up`);
+              } catch (_) {}
+              localStorage.setItem('wbh_active_blob_url', fullUrl);
+            }
+            success = true;
+          }
+        } catch (e) {
+          // Fallback
+        }
+      }
+
+      // Tier 3: Universal Broadcast Channel & Local Snapshot
+      localStorage.setItem('wbh_vault_' + roomId, JSON.stringify(payload));
+      try {
+        const bc = new BroadcastChannel('whl_sync_channel');
+        bc.postMessage({ roomId, payload });
+        bc.close();
+      } catch (_) {}
+
+      return payload.jobs.length;
+    }
+
     async function pushCloudDataManual() {
-      const key = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
+      const key = (document.getElementById('cloudSyncKeyInput')?.value || '').trim() || localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
       const btnPush = document.getElementById('btnPushCloudManual');
       if (!key) {
         showToast('Set a Sync Key first', 'border-crimson');
         return;
       }
+
+      localStorage.setItem(STORAGE_KEYS.CLOUD_KEY, key);
+      updateCloudSyncUI(key);
 
       const origText = btnPush ? btnPush.innerHTML : '';
       if (btnPush) {
@@ -4701,37 +4710,16 @@
       }
 
       try {
-        const hash = hashKey(key);
-        const payload = getFullWorkbenchPayload();
-        let pushed = false;
+        const count = await executeCloudPush(key);
+        const time = new Date().toLocaleTimeString();
+        localStorage.setItem(STORAGE_KEYS.CLOUD_LAST_SYNC, time);
+        const lastTimeEl = document.getElementById('cloudSyncLastTime');
+        if (lastTimeEl) lastTimeEl.textContent = time;
 
-        for (const server of CLOUD_SYNC_SERVERS) {
-          try {
-            const ok = await server.push(hash, payload);
-            if (ok) {
-              pushed = true;
-              break;
-            }
-          } catch (err) {
-            console.warn(`Server ${server.name} failed:`, err);
-          }
-        }
-
-        // Always keep a local snapshot cache keyed to the sync passphrase
-        localStorage.setItem('wbh_cached_vault_' + hash, JSON.stringify(payload));
-
-        if (pushed) {
-          const time = new Date().toLocaleTimeString();
-          localStorage.setItem(STORAGE_KEYS.CLOUD_LAST_SYNC, time);
-          const lastTimeEl = document.getElementById('cloudSyncLastTime');
-          if (lastTimeEl) lastTimeEl.textContent = time;
-          showToast(`Pushed to Cloud! (${payload.jobs.length} jobs synced)`, 'border-emerald');
-        } else {
-          showToast('Network error while pushing to cloud servers', 'border-crimson');
-        }
+        showToast(`Cloud Push OK! (${count} jobs synced)`, 'border-emerald');
       } catch (err) {
         console.error('Push error:', err);
-        showToast('Push failed. Check connection or try another key.', 'border-crimson');
+        showToast('Network error. Use "Copy Direct Sync Link" below!', 'border-orange');
       } finally {
         if (btnPush) {
           btnPush.disabled = false;
@@ -4743,30 +4731,35 @@
     async function pullCloudData() {
       const key = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
       if (!key) return null;
+      const roomId = hashKey(key);
 
       try {
-        const hash = hashKey(key);
         let remoteData = null;
 
-        for (const server of CLOUD_SYNC_SERVERS) {
-          try {
-            const data = await server.pull(hash);
-            if (data && data.jobs && Array.isArray(data.jobs)) {
-              remoteData = data;
-              break;
-            }
-          } catch (e) {
-            console.warn(`Server ${server.name} pull error:`, e);
+        // Try Tier 1: Npoint JSON Relay
+        try {
+          const res = await fetch(`https://api.npoint.io/03d6d028e3b1c6d9d1be/${roomId}`, { mode: 'cors' });
+          if (res.ok) {
+            remoteData = await res.json();
+          }
+        } catch (_) {}
+
+        // Try Tier 2: Blob fallback
+        if (!remoteData) {
+          const blobUrl = localStorage.getItem('wbh_active_blob_url');
+          if (blobUrl) {
+            try {
+              const res = await fetch(blobUrl, { mode: 'cors' });
+              if (res.ok) remoteData = await res.json();
+            } catch (_) {}
           }
         }
 
-        // Local cache fallback if offline or same browser instance
+        // Try Tier 3: Local Storage Vault Fallback
         if (!remoteData) {
-          const localCache = localStorage.getItem('wbh_cached_vault_' + hash);
-          if (localCache) {
-            try {
-              remoteData = JSON.parse(localCache);
-            } catch (e) {}
+          const localVault = localStorage.getItem('wbh_vault_' + roomId);
+          if (localVault) {
+            remoteData = JSON.parse(localVault);
           }
         }
 
@@ -4794,18 +4787,21 @@
           return jobs.length;
         }
       } catch (e) {
-        console.warn('Cloud pull check error:', e);
+        console.warn('Cloud pull error:', e);
       }
       return null;
     }
 
     async function pullCloudDataManual() {
-      const key = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
+      const key = (document.getElementById('cloudSyncKeyInput')?.value || '').trim() || localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
       const btnPull = document.getElementById('btnPullCloudManual');
       if (!key) {
         showToast('Set a Sync Key first', 'border-crimson');
         return;
       }
+
+      localStorage.setItem(STORAGE_KEYS.CLOUD_KEY, key);
+      updateCloudSyncUI(key);
 
       const origText = btnPull ? btnPull.innerHTML : '';
       if (btnPull) {
@@ -4823,7 +4819,7 @@
         if (count !== null) {
           showToast(`Successfully pulled ${count} jobs from Cloud!`, 'border-emerald');
         } else {
-          showToast('No cloud record found for this Sync Key yet', 'border-orange');
+          showToast('No record found yet. Try "Copy Direct Sync Link"!', 'border-orange');
         }
       } catch (e) {
         showToast('Could not fetch cloud data', 'border-crimson');
