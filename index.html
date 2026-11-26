@@ -3034,11 +3034,17 @@
     const currentFestival = detectCurrentFestival();
     let isFestiveActive = localStorage.getItem(STORAGE_KEYS.FESTIVE_ACTIVE) === 'true';
 
-    // Reliable public CORS-friendly cloud backend with local blob fallback
-    const CLOUD_ENDPOINTS = [
-      'https://jsonblob.com/api/jsonBlob',
-      'https://api.restful-api.dev/objects'
-    ];
+    // Robust deterministic cloud key-value store architecture
+    // Directly maps any user sync key to the identical remote document without relying on local IDs
+    function getCloudBucketUrl(key) {
+      let hash = 5381;
+      for (let i = 0; i < key.length; i++) {
+        hash = ((hash << 5) + hash) + key.charCodeAt(i);
+        hash = hash & hash;
+      }
+      const safeId = 'whl_' + Math.abs(hash).toString(36) + '_' + key.replace(/[^a-zA-Z0-9]/g, '').toLowerCase().slice(0, 12);
+      return `https://kvdb.io/6Pj7p2wB9r6wzN4m5Uj6B7/${safeId}`;
+    }
 
     const DEFAULT_JOBS = [
       {
@@ -4535,30 +4541,20 @@
       if (!key) return;
       try {
         const payload = getFullWorkbenchPayload();
-        // Uses npoint / jsonblob persistent endpoint with key tagging
-        const res = await fetch(`https://api.npoint.io/${encodeURIComponent(hashKey(key))}`, {
+        const url = getCloudBucketUrl(key);
+        await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
-        }).catch(() => null);
-
+        });
         localStorage.setItem(STORAGE_KEYS.CLOUD_LAST_SYNC, new Date().toLocaleTimeString());
       } catch (e) {
         console.warn('Silent cloud sync failed:', e);
       }
     }
 
-    function hashKey(str) {
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        hash = ((hash << 5) - hash) + str.charCodeAt(i);
-        hash |= 0;
-      }
-      return 'whl_' + Math.abs(hash).toString(16).padStart(8, '0');
-    }
-
     async function pushCloudDataManual() {
-      const key = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
+      const key = (localStorage.getItem(STORAGE_KEYS.CLOUD_KEY) || '').trim();
       const btnPush = document.getElementById('btnPushCloudManual');
       if (!key) {
         showToast('Set a Sync Key first', 'border-crimson');
@@ -4573,76 +4569,26 @@
 
       try {
         const payload = getFullWorkbenchPayload();
-        let pushSuccess = false;
-        const roomId = hashKey(key);
+        const url = getCloudBucketUrl(key);
 
-        // 1. Primary: JSONBlob persistent lookup via deterministic key header
-        try {
-          let existingBlobId = localStorage.getItem('wbh_blob_id_' + key);
-          let res;
-          
-          if (existingBlobId) {
-            // Update existing blob if we already have the URL
-            res = await fetch(existingBlobId, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              },
-              body: JSON.stringify(payload)
-            });
-          }
+        let res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
 
-          if (!res || !res.ok) {
-            // Create or re-create
-            res = await fetch('https://jsonblob.com/api/jsonBlob', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-              },
-              body: JSON.stringify(payload)
-            });
-            if (res.ok) {
-              const location = res.headers.get('Location') || res.headers.get('x-jsonblob-id');
-              if (location) {
-                const fullUrl = location.startsWith('http') ? location : `https://jsonblob.com/api/jsonBlob/${location}`;
-                localStorage.setItem('wbh_blob_id_' + key, fullUrl);
-              }
-            }
-          }
-
-          if (res && res.ok) {
-            pushSuccess = true;
-          }
-        } catch (e1) {
-          console.warn('Primary cloud push error, attempting fallback:', e1);
-        }
-
-        // 2. Secondary fallback: Cloud KV relay channel
-        try {
-          const resRelay = await fetch(`https://api.restful-api.dev/objects`, {
-            method: 'POST',
+        if (!res.ok) {
+          // Backup fallback using raw PUT
+          res = await fetch(url, {
+            method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              name: `WHL_SYNC_${roomId}`,
-              data: payload
-            })
+            body: JSON.stringify(payload)
           });
-          if (resRelay.ok) {
-            const data = await resRelay.json();
-            if (data && data.id) {
-              localStorage.setItem('wbh_relay_id_' + key, data.id);
-              pushSuccess = true;
-            }
-          }
-        } catch (e2) {
-          console.warn('Relay cloud push error:', e2);
         }
 
-        // Cache snapshot locally as guaranteed fallback
-        localStorage.setItem('wbh_local_cloud_cache_' + key, JSON.stringify(payload));
-        pushSuccess = true;
+        if (!res.ok) {
+          throw new Error(`HTTP status ${res.status}`);
+        }
 
         const time = new Date().toLocaleTimeString();
         localStorage.setItem(STORAGE_KEYS.CLOUD_LAST_SYNC, time);
@@ -4652,7 +4598,7 @@
         showToast(`Pushed to Cloud! (${payload.jobs.length} jobs synced)`, 'border-emerald');
       } catch (err) {
         console.error('Push error:', err);
-        showToast('Network error updating cloud', 'border-crimson');
+        showToast('Push failed. Check connection or try another key.', 'border-crimson');
       } finally {
         if (btnPush) {
           btnPush.disabled = false;
@@ -4662,50 +4608,21 @@
     }
 
     async function pullCloudData() {
-      const key = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
-      if (!key) return;
+      const key = (localStorage.getItem(STORAGE_KEYS.CLOUD_KEY) || '').trim();
+      if (!key) return null;
 
       try {
-        let remoteData = null;
+        const url = getCloudBucketUrl(key);
+        const res = await fetch(url, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
 
-        // 1. Try pulling from JSONBlob URL
-        const savedBlobUrl = localStorage.getItem('wbh_blob_id_' + key);
-        if (savedBlobUrl) {
-          try {
-            const res = await fetch(savedBlobUrl, {
-              headers: { 'Accept': 'application/json' }
-            });
-            if (res.ok) {
-              remoteData = await res.json();
-            }
-          } catch (e) {
-            console.warn('JSONBlob pull error:', e);
-          }
+        if (!res.ok) {
+          return null;
         }
 
-        // 2. Try pulling from Relay channel if not found
-        if (!remoteData) {
-          const relayId = localStorage.getItem('wbh_relay_id_' + key);
-          if (relayId) {
-            try {
-              const res = await fetch(`https://api.restful-api.dev/objects/${relayId}`);
-              if (res.ok) {
-                const json = await res.json();
-                if (json && json.data) remoteData = json.data;
-              }
-            } catch (e) {
-              console.warn('Relay pull error:', e);
-            }
-          }
-        }
-
-        // 3. Fallback to cached cloud snapshot for the sync key
-        if (!remoteData) {
-          const cached = localStorage.getItem('wbh_local_cloud_cache_' + key);
-          if (cached) {
-            remoteData = JSON.parse(cached);
-          }
-        }
+        const remoteData = await res.json();
 
         if (remoteData) {
           if (Array.isArray(remoteData)) {
@@ -4731,13 +4648,13 @@
           return jobs.length;
         }
       } catch (e) {
-        console.warn('Cloud pull check error:', e);
+        console.warn('Cloud pull error:', e);
       }
       return null;
     }
 
     async function pullCloudDataManual() {
-      const key = localStorage.getItem(STORAGE_KEYS.CLOUD_KEY);
+      const key = (localStorage.getItem(STORAGE_KEYS.CLOUD_KEY) || '').trim();
       const btnPull = document.getElementById('btnPullCloudManual');
       if (!key) {
         showToast('Set a Sync Key first', 'border-crimson');
@@ -4760,7 +4677,7 @@
         if (count !== null) {
           showToast(`Successfully pulled ${count} jobs from Cloud!`, 'border-emerald');
         } else {
-          showToast('No cloud record found for this Sync Key yet', 'border-orange');
+          showToast('No cloud record found for this Sync Key yet. Push first!', 'border-orange');
         }
       } catch (e) {
         showToast('Could not fetch cloud data', 'border-crimson');
